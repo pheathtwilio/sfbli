@@ -1,0 +1,38 @@
+{
+  "description": "SFBLI Demo - Agent Escalation. Connects outbound call to human agent immediately for compliance.",
+  "states": [
+    {
+      "name": "Trigger",
+      "type": "trigger",
+      "transitions": [
+        { "event": "incomingMessage" },
+        { "event": "incomingCall", "next": "connect_agent" },
+        { "event": "incomingConversationMessage" },
+        { "event": "incomingRequest", "next": "connect_agent" },
+        { "event": "incomingParent", "next": "connect_agent" }
+      ],
+      "properties": {
+        "offset": { "x": 0, "y": 0 }
+      }
+    },
+    {
+      "name": "connect_agent",
+      "type": "connect-call-to",
+      "transitions": [
+        { "event": "callCompleted" },
+        { "event": "hangup" }
+      ],
+      "properties": {
+        "offset": { "x": 0, "y": 200 },
+        "caller_id": "{{trigger.call.From}}",
+        "noun": "number",
+        "to": "{{flow.data.agent_phone}}",
+        "timeout": 30
+      }
+    }
+  ],
+  "initial_state": "Trigger",
+  "flags": {
+    "allow_concurrent_calls": true
+  }
+}

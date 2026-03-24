@@ -21,16 +21,18 @@ exports.handler = async function (context, event, callback) {
 
   try {
     const client = context.getTwilioClient();
-    const studioUrl = `https://webhooks.twilio.com/v1/Accounts/${context.ACCOUNT_SID}/Flows/${context.STUDIO_FLOW_SID}`;
-
-    const call = await client.calls.create({
-      from: context.TWILIO_PHONE_NUMBER,
-      to,
-      url: studioUrl
-    });
+    const execution = await client.studio
+      .v2.flows(context.STUDIO_FLOW_SID)
+      .executions.create({
+        to,
+        from: context.TWILIO_PHONE_NUMBER,
+        parameters: JSON.stringify({
+          agent_phone: context.AGENT_PHONE_NUMBER
+        })
+      });
 
     response.setStatusCode(200);
-    response.setBody({ callSid: call.sid, status: call.status });
+    response.setBody({ callSid: execution.sid, status: execution.status });
     return callback(null, response);
   } catch (err) {
     response.setStatusCode(500);
