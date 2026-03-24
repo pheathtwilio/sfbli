@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Segment Demo</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <!-- SIDEBAR -->
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <circle cx="14" cy="14" r="12" stroke="#52BD94" stroke-width="2"/>
+          <path d="M9 14h10M14 9v10" stroke="#52BD94" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <span class="sidebar-title">Connections</span>
+      </div>
+      <ul class="sidebar-nav">
+        <li class="sidebar-item active" data-view="events">
+          <span class="sidebar-icon">&#9679;</span> Events
+        </li>
+        <li class="sidebar-item" data-view="profiles">
+          <span class="sidebar-icon">&#9679;</span> Profiles
+        </li>
+        <li class="sidebar-item" data-view="audiences">
+          <span class="sidebar-icon">&#9679;</span> Audiences
+        </li>
+        <li class="sidebar-item" data-view="connections">
+          <span class="sidebar-icon">&#9679;</span> Connections
+        </li>
+      </ul>
+    </nav>
+
+    <!-- CENTER PANEL -->
+    <main class="center-panel">
+      <!-- Event Stream -->
+      <section class="panel-section" id="event-stream-section">
+        <div class="section-header">
+          <h2>Event Stream</h2>
+          <button class="btn btn-sm btn-outline" id="replay-btn">Replay</button>
+        </div>
+        <div class="event-list" id="event-list">
+          <!-- Events injected by JS -->
+        </div>
+      </section>
+
+      <!-- Agent Profile -->
+      <section class="panel-section" id="profile-section">
+        <div class="section-header">
+          <h2>Agent Profile</h2>
+          <button class="btn btn-sm btn-outline" id="edit-profile-btn">Edit</button>
+        </div>
+        <div class="profile-card" id="profile-card">
+          <div class="profile-field">
+            <span class="profile-label">Name</span>
+            <span class="profile-value" data-field="name">Marcus Rivera</span>
+          </div>
+          <div class="profile-field">
+            <span class="profile-label">Phone</span>
+            <span class="profile-value" data-field="phone">+1 (555) 000-0000</span>
+          </div>
+          <div class="profile-field">
+            <span class="profile-label">Email</span>
+            <span class="profile-value" data-field="email">agent@example.com</span>
+          </div>
+          <div class="profile-field">
+            <span class="profile-label">Region</span>
+            <span class="profile-value" data-field="region">Southeast</span>
+          </div>
+          <div class="profile-field">
+            <span class="profile-label">Status</span>
+            <span class="profile-value profile-badge" data-field="status">Active</span>
+          </div>
+          <div class="profile-field">
+            <span class="profile-label">Engagement Score</span>
+            <span class="profile-value" data-field="engagement_score">72</span>
+          </div>
+          <div class="profile-field">
+            <span class="profile-label">Predicted Churn</span>
+            <span class="profile-value" data-field="predicted_churn">Low</span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- RIGHT PANEL -->
+    <aside class="right-panel">
+      <!-- Channel Controls -->
+      <section class="panel-section" id="outreach-section">
+        <h2>Outreach</h2>
+
+        <!-- Template Selector (hidden by default) -->
+        <div class="template-selector hidden" id="template-selector">
+          <div class="template-selector-header">
+            <h3 id="template-selector-title">Select Template</h3>
+            <button class="btn btn-sm btn-ghost" id="template-cancel-btn">&times;</button>
+          </div>
+          <select class="template-dropdown" id="template-dropdown">
+            <option value="">Loading templates...</option>
+          </select>
+          <div class="template-variables" id="template-variables">
+            <!-- Variable fields injected by JS -->
+          </div>
+          <button class="btn btn-primary" id="template-send-btn">Send</button>
+        </div>
+
+        <!-- Channel Buttons -->
+        <div class="channel-controls" id="channel-controls">
+          <button class="btn btn-channel btn-rcs" data-channel="rcs" id="btn-rcs">
+            <span class="channel-icon">&#128172;</span>
+            Send RCS / SMS
+            <span class="channel-status" id="status-rcs"></span>
+          </button>
+          <button class="btn btn-channel btn-email" data-channel="email" id="btn-email">
+            <span class="channel-icon">&#9993;</span>
+            Send Email
+            <span class="channel-status" id="status-email"></span>
+          </button>
+          <button class="btn btn-channel btn-voice" data-channel="voice" id="btn-voice">
+            <span class="channel-icon">&#128222;</span>
+            Trigger Voice Call
+            <span class="channel-status" id="status-voice"></span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Conversation View -->
+      <section class="panel-section conversation-section" id="conversation-section">
+        <h2>Conversation</h2>
+        <div class="conversation-thread" id="conversation-thread">
+          <div class="conversation-empty">No messages yet. Send outreach to begin.</div>
+        </div>
+      </section>
+    </aside>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
