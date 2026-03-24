@@ -1,0 +1,17 @@
+:root {
+  --brand-primary: #52BD94;
+  --brand-primary-hover: #43a77f;
+  --brand-sidebar-bg: #1a1a2e;
+  --brand-sidebar-text: #8892b0;
+  --brand-sidebar-active: #52BD94;
+  --brand-content-bg: #ffffff;
+  --brand-content-secondary-bg: #f8f9fa;
+  --brand-text-primary: #1a1a2e;
+  --brand-text-secondary: #666666;
+  --brand-border: #e1e4e8;
+  --brand-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --brand-logo-url: none;
+  --brand-channel-rcs: #52BD94;
+  --brand-channel-email: #3498db;
+  --brand-channel-voice: #e74c3c;
+}

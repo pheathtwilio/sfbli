@@ -1,0 +1,15 @@
+{
+  "name": "Demo",
+  "terminology": {
+    "agent": "Agent",
+    "company": "Insurance Co"
+  },
+  "defaultContact": {
+    "name": "Marcus Rivera",
+    "phone": "",
+    "email": "",
+    "region": "Southeast",
+    "status": "Active",
+    "engagement_score": 72
+  }
+}

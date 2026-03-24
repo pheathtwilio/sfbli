@@ -1,0 +1,18 @@
+{
+  "name": "Website Abandon",
+  "description": "Insurance agent visits site, browses policies, starts quote, abandons",
+  "events": [
+    { "type": "page_view", "page": "/auto-insurance", "delay": 0, "label": "Viewed Auto Insurance" },
+    { "type": "page_view", "page": "/get-quote", "delay": 2000, "label": "Viewed Get Quote" },
+    { "type": "form_start", "form": "quote_form", "delay": 3500, "label": "Started Quote Form" },
+    { "type": "form_field", "form": "quote_form", "field": "vehicle_type", "delay": 5000, "label": "Entered Vehicle Type" },
+    { "type": "form_abandon", "form": "quote_form", "delay": 7000, "label": "Abandoned Quote Form" },
+    { "type": "session_end", "reason": "abandoned", "delay": 8000, "label": "Session Ended (Abandoned)" }
+  ],
+  "profile_updates": {
+    "status": "At Risk",
+    "engagement_score_before": 72,
+    "engagement_score_after": 45,
+    "predicted_churn": "High"
+  }
+}
