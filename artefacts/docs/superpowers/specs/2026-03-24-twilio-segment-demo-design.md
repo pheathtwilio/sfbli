@@ -34,7 +34,7 @@ A single-page Segment-inspired dashboard served as a Twilio Asset from the exist
 1. **Dark sidebar (left)** — Segment-style navigation. Unbranded. Nav items: Events, Profiles, Audiences, Connections. Visual decoration to establish the Segment look and feel.
 
 2. **Event stream + agent profile (center):**
-   - **Event stream:** Simulated real-time feed of behavioral signals. Events appear chronologically: page views (`/auto-insurance`, `/get-quote`), form interactions (`quote_form_started`), session events (`session_abandoned`). All data is mocked in a config object in the frontend.
+   - **Event stream:** Simulated real-time feed of behavioral signals. Events appear chronologically and are driven by an external scenario config file (`scenarios/` directory) so they can be easily changed without modifying application code. See **Scenario Configuration** section below.
    - **Agent profile card:** Configurable contact details (name, phone, email, region, engagement score, status). Editable in the UI before/during the demo. Fields: name, phone number, email address, region, agent status, engagement score.
 
 3. **Outreach panel (right):**
@@ -100,6 +100,49 @@ A Twilio Studio Flow for the voice call escalation:
 2. `<Connect>` widget — connects to the human agent's phone number
 3. Must complete connection within 2 seconds (outbound call compliance requirement)
 4. The Studio Flow needs to be created as part of this project
+
+## Scenario Configuration
+
+Behavioral signals are defined in standalone JSON scenario files, making them easy to swap or update without touching application code.
+
+### Scenario File Structure
+
+```
+assets/scenarios/
+  default.json          — current demo scenario
+  abandoned-quote.json  — agent abandons a quote flow
+  inactive-agent.json   — agent hasn't logged in for 30 days
+```
+
+### Scenario JSON Format
+
+```json
+{
+  "name": "Website Abandon",
+  "description": "Agent visits site, browses policies, starts quote, abandons",
+  "events": [
+    { "type": "page_view", "page": "/auto-insurance", "delay": 0, "label": "Viewed Auto Insurance" },
+    { "type": "page_view", "page": "/get-quote", "delay": 2000, "label": "Viewed Get Quote" },
+    { "type": "form_start", "form": "quote_form", "delay": 3000, "label": "Started Quote Form" },
+    { "type": "form_abandon", "form": "quote_form", "delay": 5000, "label": "Abandoned Quote Form" },
+    { "type": "session_end", "reason": "abandoned", "delay": 6000, "label": "Session Abandoned" }
+  ],
+  "profile_updates": {
+    "status": "At Risk",
+    "engagement_score_before": 72,
+    "engagement_score_after": 45,
+    "predicted_churn": "High"
+  }
+}
+```
+
+### How It Works
+
+- On page load, the frontend fetches the scenario file (default or specified via `?scenario=abandoned-quote`)
+- Events replay in the event stream with the specified delays, simulating real-time activity
+- Profile card updates according to `profile_updates` as events play out
+- **Changing signals:** Edit or create a new JSON file, redeploy. No code changes needed.
+- The scenario file is a Twilio Asset alongside the other frontend files
 
 ## RCS/SMS Message Configuration
 
@@ -218,6 +261,8 @@ sfbli-functions-service/
     brands/
       default.css           — unbranded theme
       default.json          — default config
+    scenarios/
+      default.json          — current demo scenario
   functions/
     send-rcs.js
     send-email.js
