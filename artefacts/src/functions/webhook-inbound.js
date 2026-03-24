@@ -1,22 +1,21 @@
-// Module-scoped message store — persists across warm invocations
-const messageStore = [];
-
-function _getMessages(since) {
-  return messageStore.filter(m => m.timestamp > since);
+// Load shared message store — Runtime.getAssets() in Twilio, direct require in tests
+let store;
+try {
+  const asset = Runtime.getAssets()['/message-store.js'];
+  store = require(asset.path);
+} catch (e) {
+  store = require('../assets/message-store.private');
 }
 
-function _clearMessages() {
-  messageStore.length = 0;
-}
-
-exports._getMessages = _getMessages;
-exports._clearMessages = _clearMessages;
-exports.messageStore = messageStore;
+// Re-export for tests
+exports._getMessages = store.getMessages;
+exports._clearMessages = store.clearMessages;
+exports.messageStore = store.messageStore;
 
 exports.handler = async function (context, event, callback) {
   const { From, Body, MessageSid } = event;
 
-  messageStore.push({
+  store.addMessage({
     from: From,
     body: Body,
     messageSid: MessageSid,

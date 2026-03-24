@@ -1,4 +1,11 @@
-const { _getMessages } = require('./webhook-inbound');
+// Load shared message store — Runtime.getAssets() in Twilio, direct require in tests
+let store;
+try {
+  const asset = Runtime.getAssets()['/message-store.js'];
+  store = require(asset.path);
+} catch (e) {
+  store = require('../assets/message-store.private');
+}
 
 exports.handler = async function (context, event, callback) {
   const response = new Twilio.Response();
@@ -14,7 +21,7 @@ exports.handler = async function (context, event, callback) {
   }
 
   const since = parseInt(event.since || '0', 10);
-  const messages = _getMessages(since);
+  const messages = store.getMessages(since);
 
   response.setStatusCode(200);
   response.setBody({ messages });
