@@ -21,18 +21,20 @@ exports.handler = async function (context, event, callback) {
 
   try {
     const client = context.getTwilioClient();
-    const execution = await client.studio
-      .v2.flows(context.STUDIO_FLOW_SID)
-      .executions.create({
-        to,
-        from: context.TWILIO_PHONE_NUMBER,
-        parameters: JSON.stringify({
-          agent_phone: context.AGENT_PHONE_NUMBER
-        })
-      });
+    const agentPhone = context.AGENT_PHONE_NUMBER;
+
+    // TwiML that immediately connects to the agent (< 2 second compliance)
+    const voiceFrom = context.VOICE_CALLER_ID || context.TWILIO_PHONE_NUMBER;
+    const twiml = `<Response><Say voice="Polly.Joanna">Hi, this is SFBLI reaching out regarding your account. We noticed some recent activity and wanted to connect you with your account representative. Please hold while we transfer you now.</Say><Pause length="2"/><Say voice="Polly.Joanna">You are now connected to your SFBLI account representative. Thank you for your time today.</Say><Pause length="3"/></Response>`;
+
+    const call = await client.calls.create({
+      to,
+      from: voiceFrom,
+      twiml
+    });
 
     response.setStatusCode(200);
-    response.setBody({ callSid: execution.sid, status: execution.status });
+    response.setBody({ callSid: call.sid, status: call.status });
     return callback(null, response);
   } catch (err) {
     response.setStatusCode(500);

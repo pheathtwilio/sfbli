@@ -5,9 +5,9 @@
     "company": "Insurance Co"
   },
   "defaultContact": {
-    "name": "Marcus Rivera",
-    "phone": "",
-    "email": "",
+    "name": "Paul Heath",
+    "phone": "+13125689550",
+    "email": "pheath@twilio.com",
     "region": "Southeast",
     "status": "Active",
     "engagement_score": 72

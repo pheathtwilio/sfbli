@@ -24,6 +24,7 @@ describe('send-rcs function', () => {
     };
     mockContext = {
       TWILIO_PHONE_NUMBER: '+15551234567',
+      MESSAGING_SERVICE_SID: 'MG1234567890',
       getTwilioClient: jest.fn(() => mockClient)
     };
     mockCallback = jest.fn();
@@ -39,7 +40,7 @@ describe('send-rcs function', () => {
     await handler(mockContext, event, mockCallback);
 
     expect(mockClient.messages.create).toHaveBeenCalledWith({
-      from: '+15551234567',
+      messagingServiceSid: 'MG1234567890',
       to: '+15559876543',
       contentSid: 'HX1234567890',
       contentVariables: JSON.stringify({ '1': 'Marcus Rivera' })

@@ -1,13 +1,15 @@
 {
   "name": "Website Abandon",
-  "description": "Insurance agent visits site, browses policies, starts quote, abandons",
+  "description": "Insurance agent visits site, browses policies, starts quote, abandons. Warehouse data shows prior engagement history.",
   "events": [
-    { "type": "page_view", "page": "/auto-insurance", "delay": 0, "label": "Viewed Auto Insurance" },
-    { "type": "page_view", "page": "/get-quote", "delay": 2000, "label": "Viewed Get Quote" },
-    { "type": "form_start", "form": "quote_form", "delay": 3500, "label": "Started Quote Form" },
-    { "type": "form_field", "form": "quote_form", "field": "vehicle_type", "delay": 5000, "label": "Entered Vehicle Type" },
-    { "type": "form_abandon", "form": "quote_form", "delay": 7000, "label": "Abandoned Quote Form" },
-    { "type": "session_end", "reason": "abandoned", "delay": 8000, "label": "Session Ended (Abandoned)" }
+    { "type": "email_delivered", "delay": 0, "label": "Email Delivered: Policy Renewal Reminder" },
+    { "type": "email_opened", "delay": 1500, "label": "Email Opened: Policy Renewal Reminder" },
+    { "type": "page_view", "page": "/auto-insurance", "delay": 3000, "label": "Viewed Auto Insurance Page" },
+    { "type": "page_view", "page": "/get-quote", "delay": 4500, "label": "Viewed Get Quote" },
+    { "type": "form_start", "form": "quote_form", "delay": 6000, "label": "Started Quote Form" },
+    { "type": "form_field", "form": "quote_form", "field": "vehicle_type", "delay": 7500, "label": "Entered Vehicle Type" },
+    { "type": "form_abandon", "form": "quote_form", "delay": 9500, "label": "Abandoned Quote Form" },
+    { "type": "session_end", "reason": "abandoned", "delay": 11000, "label": "Session Ended (Abandoned)" }
   ],
   "profile_updates": {
     "status": "At Risk",

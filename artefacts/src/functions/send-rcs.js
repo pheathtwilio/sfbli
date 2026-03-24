@@ -22,7 +22,7 @@ exports.handler = async function (context, event, callback) {
   try {
     const client = context.getTwilioClient();
     const message = await client.messages.create({
-      from: context.TWILIO_PHONE_NUMBER,
+      messagingServiceSid: context.MESSAGING_SERVICE_SID,
       to,
       contentSid,
       contentVariables: contentVariables || '{}'

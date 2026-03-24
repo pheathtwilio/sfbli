@@ -10,78 +10,269 @@
   <div class="app">
     <!-- SIDEBAR -->
     <nav class="sidebar" id="sidebar">
-      <div class="sidebar-logo">
-        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-          <circle cx="14" cy="14" r="12" stroke="#52BD94" stroke-width="2"/>
-          <path d="M9 14h10M14 9v10" stroke="#52BD94" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-        <span class="sidebar-title">Connections</span>
+      <div class="sidebar-header">
+        <div class="sidebar-workspace">
+          <div class="workspace-avatar">S</div>
+          <span class="workspace-name">SFBLI</span>
+        </div>
       </div>
+
       <ul class="sidebar-nav">
-        <li class="sidebar-item active" data-view="events">
-          <span class="sidebar-icon">&#9679;</span> Events
+        <li class="sidebar-item" data-view="guided-setup">
+          <span class="sidebar-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 12.5a5.5 5.5 0 110-11 5.5 5.5 0 010 11zM7.25 5h1.5v3.25H12v1.5H7.25V5z"/></svg></span>
+          Guided Setup
         </li>
-        <li class="sidebar-item" data-view="profiles">
-          <span class="sidebar-icon">&#9679;</span> Profiles
+        <li class="sidebar-item" data-view="home">
+          <span class="sidebar-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L1 7h2v7h4V10h2v4h4V7h2L8 1z"/></svg></span>
+          Home
         </li>
-        <li class="sidebar-item" data-view="audiences">
-          <span class="sidebar-icon">&#9679;</span> Audiences
+
+        <li class="sidebar-section">
+          <div class="sidebar-section-header" data-section="connections">
+            <span class="sidebar-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2a2 2 0 00-2 2v1h2V4h8v1h2V4a2 2 0 00-2-2H4zm10 5H2v5a2 2 0 002 2h8a2 2 0 002-2V7zM5 9h6v1.5H5V9z"/></svg></span>
+            <span class="sidebar-section-label">Connections</span>
+            <span class="sidebar-chevron">&#9662;</span>
+          </div>
+          <ul class="sidebar-subnav open">
+            <li class="sidebar-subitem active" data-view="sources">Sources</li>
+            <li class="sidebar-subitem" data-view="destinations">Destinations</li>
+            <li class="sidebar-subitem" data-view="catalog">Catalog</li>
+          </ul>
         </li>
-        <li class="sidebar-item" data-view="connections">
-          <span class="sidebar-icon">&#9679;</span> Connections
+
+        <li class="sidebar-item" data-view="privacy">
+          <span class="sidebar-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L2 4v4c0 3.5 2.6 6.6 6 7.4 3.4-.8 6-3.9 6-7.4V4L8 1zm0 7h4c-.3 2.5-2 4.6-4 5.3V8H4V4.7L8 3v5z"/></svg></span>
+          Privacy
+        </li>
+
+        <li class="sidebar-item" data-view="protocols">
+          <span class="sidebar-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1 2v2h8V4H4zm0 4v1.5h5V8H4zm0 3v1.5h7V11H4z"/></svg></span>
+          Protocols
+        </li>
+
+        <li class="sidebar-section">
+          <div class="sidebar-section-header" data-section="unify">
+            <span class="sidebar-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a3 3 0 100 6 3 3 0 000-6zM3 12c0-2.2 2.2-4 5-4s5 1.8 5 4v1H3v-1z"/></svg></span>
+            <span class="sidebar-section-label">Unify</span>
+            <span class="sidebar-chevron">&#9662;</span>
+          </div>
+          <ul class="sidebar-subnav open">
+            <li class="sidebar-subitem" data-view="profile-explorer">Profile explorer</li>
+            <li class="sidebar-subitem" data-view="profiles-sync">Profiles Sync</li>
+            <li class="sidebar-subitem" data-view="profiles-insights">Profiles Insights</li>
+            <li class="sidebar-subitem" data-view="data-graph">Data Graph</li>
+            <li class="sidebar-subitem" data-view="traits">Traits</li>
+            <li class="sidebar-subitem" data-view="unify-settings">Unify settings</li>
+          </ul>
+        </li>
+
+        <li class="sidebar-item" data-view="engage">
+          <span class="sidebar-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M14 2H2v9h4l2 2 2-2h4V2zm-3 6H5V7h6v1zm0-3H5V4h6v1z"/></svg></span>
+          Engage
+        </li>
+
+        <li class="sidebar-item" data-view="settings">
+          <span class="sidebar-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M13.3 8.8l1.4-.8-.7-1.7-1.6.2a5 5 0 00-.8-.5L11.2 4h-1.8l-.4 1.6c-.3.1-.5.3-.8.5L6.6 6l-.7 1.7 1.4.8a5 5 0 000 1l-1.4.8.7 1.7 1.6-.2c.3.2.5.4.8.5l.4 1.7h1.8l.4-1.7c.3-.1.5-.3.8-.5l1.6.2.7-1.7-1.4-.8a5 5 0 000-1zM10.3 10a1.7 1.7 0 110-3.4 1.7 1.7 0 010 3.4z"/></svg></span>
+          Settings
         </li>
       </ul>
     </nav>
 
     <!-- CENTER PANEL -->
     <main class="center-panel">
-      <!-- Event Stream -->
-      <section class="panel-section" id="event-stream-section">
+      <!-- Sources View -->
+      <section class="view-panel" id="view-sources">
+        <div class="view-header">
+          <h1>Sources</h1>
+          <button class="btn btn-primary btn-sm">Add Source</button>
+        </div>
+        <p class="view-description">Sources send data into Segment from your websites, apps, servers, and cloud tools.</p>
+        <div class="sources-list" id="sources-list">
+          <div class="source-card">
+            <div class="source-card-header">
+              <div class="source-icon source-icon-warehouse">WH</div>
+              <div class="source-card-info">
+                <div class="source-card-name">SFBLI Data Warehouse</div>
+                <div class="source-card-type">Warehouse Import</div>
+              </div>
+              <span class="source-status source-status-active">Connected</span>
+            </div>
+            <div class="source-card-body">
+              <div class="source-stat">
+                <span class="source-stat-label">Events (24h)</span>
+                <span class="source-stat-value">12,847</span>
+              </div>
+              <div class="source-stat">
+                <span class="source-stat-label">Last sync</span>
+                <span class="source-stat-value">2 min ago</span>
+              </div>
+              <div class="source-stat">
+                <span class="source-stat-label">Objects</span>
+                <span class="source-stat-value">14 attributes, 9 events</span>
+              </div>
+            </div>
+            <div class="source-card-schema">
+              <h4>Attributes</h4>
+              <div class="schema-tags">
+                <span class="schema-tag">agent_id</span>
+                <span class="schema-tag">email</span>
+                <span class="schema-tag">phone</span>
+                <span class="schema-tag">license_state</span>
+                <span class="schema-tag">region</span>
+                <span class="schema-tag">policies_sold_ytd</span>
+                <span class="schema-tag">sales_target_ytd</span>
+                <span class="schema-tag">target_attainment</span>
+                <span class="schema-tag">region_rank</span>
+                <span class="schema-tag">avg_policy_value</span>
+                <span class="schema-tag">book_of_business</span>
+                <span class="schema-tag">tenure_years</span>
+                <span class="schema-tag">appointment_status</span>
+                <span class="schema-tag">last_contacted</span>
+              </div>
+              <h4>Events</h4>
+              <div class="schema-tags">
+                <span class="schema-tag">policy_app_submitted</span>
+                <span class="schema-tag">policy_issued</span>
+                <span class="schema-tag">underwriting_status_change</span>
+                <span class="schema-tag">underwriting_class_change</span>
+                <span class="schema-tag">email_delivered</span>
+                <span class="schema-tag">email_opened</span>
+                <span class="schema-tag">sms_delivered</span>
+                <span class="schema-tag">sms_opened</span>
+                <span class="schema-tag">sms_reply</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="source-card">
+            <div class="source-card-header">
+              <div class="source-icon source-icon-js">JS</div>
+              <div class="source-card-info">
+                <div class="source-card-name">sfbli.com</div>
+                <div class="source-card-type">Javascript</div>
+              </div>
+              <span class="source-status source-status-active">Connected</span>
+            </div>
+            <div class="source-card-body">
+              <div class="source-stat">
+                <span class="source-stat-label">Events (24h)</span>
+                <span class="source-stat-value">3,421</span>
+              </div>
+              <div class="source-stat">
+                <span class="source-stat-label">Last event</span>
+                <span class="source-stat-value">Just now</span>
+              </div>
+              <div class="source-stat">
+                <span class="source-stat-label">Type</span>
+                <span class="source-stat-value">Web analytics</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Profile Explorer View -->
+      <section class="view-panel hidden" id="view-profile-explorer">
+        <div class="view-header">
+          <h1>Profile Explorer</h1>
+        </div>
+        <p class="view-description">Browse and inspect user profiles across your sources.</p>
+
+        <!-- Profile List -->
+        <div id="profile-list-container">
+          <div class="profile-search">
+            <input type="text" class="profile-search-input" id="profile-search-input" placeholder="Search profiles by name, email, or ID...">
+          </div>
+          <table class="profile-table" id="profile-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Status</th>
+                <th>Engagement</th>
+              </tr>
+            </thead>
+            <tbody id="profile-table-body">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Profile Detail (hidden until profile selected) -->
+        <div class="profile-detail hidden" id="profile-detail">
+          <button class="btn btn-sm btn-outline" id="profile-back-btn">&larr; Back to profiles</button>
+          <div class="profile-detail-header" id="profile-detail-header">
+            <!-- Name, avatar, IDs -->
+          </div>
+          <div class="profile-tabs">
+            <button class="profile-tab active" data-tab="traits">Traits</button>
+            <button class="profile-tab" data-tab="events">Events</button>
+            <button class="profile-tab" data-tab="audiences">Audiences</button>
+            <button class="profile-tab" data-tab="journeys">Journeys</button>
+            <button class="profile-tab" data-tab="identities">Identities</button>
+          </div>
+          <div class="profile-tab-content" id="profile-tab-content">
+            <!-- Tab content rendered by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Events / Scenario View -->
+      <section class="view-panel hidden" id="view-events">
         <div class="section-header">
-          <h2>Event Stream</h2>
+          <h1>Event Stream</h1>
           <button class="btn btn-sm btn-outline" id="replay-btn">Replay</button>
         </div>
         <div class="event-list" id="event-list">
           <!-- Events injected by JS -->
         </div>
+
+        <!-- Agent Profile (shown below event stream) -->
+        <div class="panel-section" id="profile-section" style="margin-top: 28px;">
+          <div class="section-header">
+            <h2>Agent Profile</h2>
+            <button class="btn btn-sm btn-outline" id="edit-profile-btn">Edit</button>
+          </div>
+          <div class="profile-card" id="profile-card">
+            <div class="profile-field">
+              <span class="profile-label">Name</span>
+              <span class="profile-value" data-field="name">Paul Heath</span>
+            </div>
+            <div class="profile-field">
+              <span class="profile-label">Phone</span>
+              <span class="profile-value" data-field="phone">+1 (555) 000-0000</span>
+            </div>
+            <div class="profile-field">
+              <span class="profile-label">Email</span>
+              <span class="profile-value" data-field="email">pheath@twilio.com</span>
+            </div>
+            <div class="profile-field">
+              <span class="profile-label">Region</span>
+              <span class="profile-value" data-field="region">Southeast</span>
+            </div>
+            <div class="profile-field">
+              <span class="profile-label">Status</span>
+              <span class="profile-value profile-badge" data-field="status">Active</span>
+            </div>
+            <div class="profile-field">
+              <span class="profile-label">Engagement Score</span>
+              <span class="profile-value" data-field="engagement_score">72</span>
+            </div>
+            <div class="profile-field">
+              <span class="profile-label">Predicted Churn</span>
+              <span class="profile-value" data-field="predicted_churn">Low</span>
+            </div>
+          </div>
+        </div>
       </section>
 
-      <!-- Agent Profile -->
-      <section class="panel-section" id="profile-section">
-        <div class="section-header">
-          <h2>Agent Profile</h2>
-          <button class="btn btn-sm btn-outline" id="edit-profile-btn">Edit</button>
+      <!-- Placeholder views for other sidebar items -->
+      <section class="view-panel hidden" id="view-placeholder">
+        <div class="view-header">
+          <h1 id="placeholder-title">Page</h1>
         </div>
-        <div class="profile-card" id="profile-card">
-          <div class="profile-field">
-            <span class="profile-label">Name</span>
-            <span class="profile-value" data-field="name">Marcus Rivera</span>
-          </div>
-          <div class="profile-field">
-            <span class="profile-label">Phone</span>
-            <span class="profile-value" data-field="phone">+1 (555) 000-0000</span>
-          </div>
-          <div class="profile-field">
-            <span class="profile-label">Email</span>
-            <span class="profile-value" data-field="email">agent@example.com</span>
-          </div>
-          <div class="profile-field">
-            <span class="profile-label">Region</span>
-            <span class="profile-value" data-field="region">Southeast</span>
-          </div>
-          <div class="profile-field">
-            <span class="profile-label">Status</span>
-            <span class="profile-value profile-badge" data-field="status">Active</span>
-          </div>
-          <div class="profile-field">
-            <span class="profile-label">Engagement Score</span>
-            <span class="profile-value" data-field="engagement_score">72</span>
-          </div>
-          <div class="profile-field">
-            <span class="profile-label">Predicted Churn</span>
-            <span class="profile-value" data-field="predicted_churn">Low</span>
-          </div>
-        </div>
+        <p class="view-description placeholder-message">This section is available in the full Segment product.</p>
       </section>
     </main>
 
