@@ -1244,8 +1244,7 @@
       fetch(`${CONFIG.functionsBaseUrl}/send-rcs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: profile.phone })
-        // Template details to be added when user provides them
+        body: JSON.stringify({ to: profile.phone, contentVariables: JSON.stringify({ '1': profile.name }) })
       }).then(r => r.json()).then(() => {
         addConversationMessage('outbound', 'rcs', 'Promotional RCS/SMS sent to ' + profile.name);
       }).catch(err => console.error('Promo send failed:', err));
