@@ -478,6 +478,12 @@
     dom.btnEmail.addEventListener('click', () => showTemplateSelector('email'));
     dom.btnVoice.addEventListener('click', triggerVoiceCall);
 
+    // Audience wizard
+    const btnNewAudience = document.getElementById('btn-new-audience');
+    if (btnNewAudience) {
+      btnNewAudience.addEventListener('click', openAudienceWizard);
+    }
+
     // Profile search filter
     const searchInput = document.getElementById('profile-search-input');
     if (searchInput) {
@@ -625,6 +631,278 @@
     { name: 'form_abandon', time: 'Just now', delay: 6000 }
   ];
 
+  // ==================== AUDIENCE WIZARD ====================
+  function parseTraitValue(value) {
+    if (typeof value === 'number') return value;
+    const str = String(value);
+    // Handle "X of Y" format (e.g., "5 of 15")
+    const ofMatch = str.match(/^(\d+)\s+of\s+/);
+    if (ofMatch) return parseInt(ofMatch[1], 10);
+    // Strip $, commas, %, K, M suffixes
+    let cleaned = str.replace(/[$,%]/g, '').replace(/,/g, '').trim();
+    if (cleaned.endsWith('K')) return parseFloat(cleaned) * 1000;
+    if (cleaned.endsWith('M')) return parseFloat(cleaned) * 1000000;
+    const num = parseFloat(cleaned);
+    return isNaN(num) ? null : num;
+  }
+
+  function computeAudienceMembers(conditions) {
+    if (!conditions || conditions.length === 0) return [];
+    return MOCK_PROFILES.filter(profile => {
+      return conditions.every(cond => {
+        const raw = profile[cond.trait];
+        if (raw === undefined) return false;
+        const val = parseTraitValue(raw);
+        if (val === null) return false;
+        const target = parseFloat(cond.value);
+        if (cond.operator === 'greater than') return val > target;
+        if (cond.operator === 'less than') return val < target;
+        if (cond.operator === 'equals') return val === target;
+        return false;
+      });
+    });
+  }
+
+  function getNumericTraitKeys() {
+    return ['target_attainment', 'engagement_score', 'policies_sold_ytd', 'sales_target_ytd', 'tenure_years', 'avg_policy_value', 'book_of_business'];
+  }
+
+  function renderWizardHeader(title, steps, currentStep) {
+    const progressPct = Math.round(((currentStep - 1) / (steps.length - 1)) * 100);
+    return `
+      <div class="wizard-header">
+        <h2>${title}</h2>
+        <div class="wizard-steps">
+          ${steps.map((label, i) => {
+            const stepNum = i + 1;
+            let cls = 'wizard-step';
+            if (stepNum < currentStep) cls += ' completed';
+            else if (stepNum === currentStep) cls += ' active';
+            return `<div class="${cls}"><span class="wizard-step-number">${stepNum}</span><span class="wizard-step-label">${label}</span></div>`;
+          }).join('')}
+        </div>
+        <div class="wizard-progress"><div class="wizard-progress-bar" style="width:${progressPct}%"></div></div>
+      </div>`;
+  }
+
+  function updateAudiencePreview() {
+    const members = computeAudienceMembers(state.wizardConditions);
+    const previewEl = document.getElementById('audience-preview-panel');
+    if (!previewEl) return;
+    if (members.length === 0) {
+      previewEl.innerHTML = '<div class="audience-preview-empty">No matching profiles. Adjust your conditions.</div>';
+    } else {
+      previewEl.innerHTML = `
+        <div class="audience-preview-count">${members.length} profile${members.length !== 1 ? 's' : ''} matched</div>
+        <ul class="audience-preview-list">
+          ${members.map(m => `<li>${m.name} &mdash; ${m.status}, Score ${m.engagement_score}</li>`).join('')}
+        </ul>`;
+    }
+    // Enable/disable Next button based on conditions
+    const nextBtn = document.getElementById('wizard-next-btn');
+    if (nextBtn && state.wizardStep === 2) {
+      nextBtn.disabled = state.wizardConditions.length === 0 || members.length === 0;
+    }
+  }
+
+  function renderAudienceWizard(step) {
+    const container = document.getElementById('audience-wizard');
+    const steps = ['Select Type', 'Configure', 'Destinations', 'Review'];
+    const header = renderWizardHeader('Create Audience', steps, step);
+
+    let content = '';
+
+    if (step === 1) {
+      content = `
+        <div class="wizard-content-centered">
+          <h3 class="wizard-section-title">Select Audience Type</h3>
+          <div class="wizard-type-cards">
+            <div class="type-card type-card-selected" data-type="profiles">
+              <div class="type-card-icon">&#128100;</div>
+              <div class="type-card-title">Profiles</div>
+              <div class="type-card-desc">Build an audience from profile traits and conditions</div>
+            </div>
+            <div class="type-card type-card-dimmed" data-type="computed">
+              <div class="type-card-icon">&#9881;</div>
+              <div class="type-card-title">Computed Traits</div>
+              <div class="type-card-desc">Create audiences from computed trait values</div>
+            </div>
+            <div class="type-card type-card-dimmed" data-type="sql">
+              <div class="type-card-icon">&#128451;</div>
+              <div class="type-card-title">SQL</div>
+              <div class="type-card-desc">Write a custom SQL query to define membership</div>
+            </div>
+          </div>
+        </div>`;
+    } else if (step === 2) {
+      const traitKeys = getNumericTraitKeys();
+      const operators = ['greater than', 'less than', 'equals'];
+      const cond = state.wizardConditions[0] || {};
+      content = `
+        <div class="wizard-content-split">
+          <div class="wizard-content-left">
+            <h3 class="wizard-section-title">Configure and Preview Your Audience</h3>
+            <div class="condition-builder">
+              <div class="condition-row">
+                <div class="wizard-form-group">
+                  <label>Trait</label>
+                  <select id="cond-trait" class="wizard-select">
+                    <option value="">Select trait...</option>
+                    ${traitKeys.map(k => `<option value="${k}"${cond.trait === k ? ' selected' : ''}>${k}</option>`).join('')}
+                  </select>
+                </div>
+                <div class="wizard-form-group">
+                  <label>Operator</label>
+                  <select id="cond-operator" class="wizard-select">
+                    ${operators.map(op => `<option value="${op}"${cond.operator === op ? ' selected' : ''}>${op}</option>`).join('')}
+                  </select>
+                </div>
+                <div class="wizard-form-group">
+                  <label>Value</label>
+                  <input id="cond-value" type="number" class="wizard-input" placeholder="Enter value" value="${cond.value || ''}">
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="wizard-content-right">
+            <h3 class="wizard-section-title">Audience Preview</h3>
+            <div class="audience-preview" id="audience-preview-panel">
+              <div class="audience-preview-empty">Configure a condition to see matching profiles.</div>
+            </div>
+          </div>
+        </div>`;
+    } else if (step === 3) {
+      content = `
+        <div class="wizard-content-centered">
+          <h3 class="wizard-section-title">Select Destinations</h3>
+          <div class="wizard-type-cards">
+            <div class="type-card type-card-selected">
+              <div class="type-card-icon">&#128640;</div>
+              <div class="type-card-title">Send Interaction</div>
+              <div class="type-card-desc">PH Demo Space</div>
+            </div>
+          </div>
+        </div>`;
+    } else if (step === 4) {
+      const members = computeAudienceMembers(state.wizardConditions);
+      const cond = state.wizardConditions[0] || {};
+      const autoKey = 'aud_' + Date.now().toString(36);
+      content = `
+        <div class="wizard-content-split">
+          <div class="wizard-content-left">
+            <h3 class="wizard-section-title">Review and Create</h3>
+            <div class="wizard-form-group">
+              <label>Audience Name</label>
+              <input type="text" data-field="audience-name" class="wizard-input" placeholder="e.g. High-value agents" value="">
+            </div>
+            <div class="wizard-form-group">
+              <label>Key</label>
+              <div class="wizard-key-display">${autoKey}</div>
+            </div>
+            <div class="wizard-form-group">
+              <label>Description</label>
+              <textarea class="wizard-textarea" data-field="audience-description" placeholder="Describe this audience..." rows="3"></textarea>
+            </div>
+          </div>
+          <div class="wizard-content-right">
+            <h3 class="wizard-section-title">Summary</h3>
+            <div class="wizard-summary">
+              <div class="wizard-summary-row"><span>Audience Size</span><strong>${members.length} profile${members.length !== 1 ? 's' : ''}</strong></div>
+              <div class="wizard-summary-row"><span>Condition</span><strong>${cond.trait || '—'} ${cond.operator || ''} ${cond.value || ''}</strong></div>
+              <div class="wizard-summary-row"><span>Members</span><strong>${members.map(m => m.name).join(', ') || '—'}</strong></div>
+              <div class="wizard-summary-row"><span>Destinations</span><strong>Send Interaction (PH Demo Space)</strong></div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    // Footer with navigation buttons
+    const isFirst = step === 1;
+    const isLast = step === 4;
+    const footer = `
+      <div class="wizard-footer">
+        <button class="btn btn-secondary" id="wizard-cancel-btn">Cancel</button>
+        <div class="wizard-footer-right">
+          ${!isFirst ? '<button class="btn btn-secondary" id="wizard-back-btn">Back</button>' : ''}
+          ${!isLast ? '<button class="btn btn-primary" id="wizard-next-btn">Next</button>' : '<button class="btn btn-primary" id="wizard-create-btn">Create Audience</button>'}
+        </div>
+      </div>`;
+
+    container.innerHTML = header + '<div class="wizard-body">' + content + '</div>' + footer;
+
+    // Wire navigation buttons
+    const cancelBtn = document.getElementById('wizard-cancel-btn');
+    if (cancelBtn) cancelBtn.addEventListener('click', closeAudienceWizard);
+
+    const backBtn = document.getElementById('wizard-back-btn');
+    if (backBtn) backBtn.addEventListener('click', () => {
+      state.wizardStep = step - 1;
+      renderAudienceWizard(state.wizardStep);
+    });
+
+    const nextBtn = document.getElementById('wizard-next-btn');
+    if (nextBtn) {
+      // Disable Next on step 2 if no conditions
+      if (step === 2 && state.wizardConditions.length === 0) {
+        nextBtn.disabled = true;
+      }
+      nextBtn.addEventListener('click', () => {
+        state.wizardStep = step + 1;
+        renderAudienceWizard(state.wizardStep);
+      });
+    }
+
+    const createBtn = document.getElementById('wizard-create-btn');
+    if (createBtn) createBtn.addEventListener('click', () => {
+      closeAudienceWizard();
+    });
+
+    // Wire condition builder interactivity for step 2
+    if (step === 2) {
+      const traitSelect = document.getElementById('cond-trait');
+      const opSelect = document.getElementById('cond-operator');
+      const valInput = document.getElementById('cond-value');
+
+      function onConditionChange() {
+        const trait = traitSelect.value;
+        const operator = opSelect.value;
+        const value = valInput.value;
+        if (trait && value !== '') {
+          state.wizardConditions = [{ trait, operator, value }];
+        } else {
+          state.wizardConditions = [];
+        }
+        updateAudiencePreview();
+      }
+
+      traitSelect.addEventListener('change', onConditionChange);
+      opSelect.addEventListener('change', onConditionChange);
+      valInput.addEventListener('input', onConditionChange);
+
+      // If conditions already exist (navigating back), update preview
+      if (state.wizardConditions.length > 0) {
+        updateAudiencePreview();
+      }
+    }
+  }
+
+  function openAudienceWizard() {
+    state.activeWizard = 'audience';
+    state.wizardStep = 1;
+    state.wizardConditions = [];
+    document.getElementById('audiences-list-container').classList.add('hidden');
+    document.getElementById('audience-wizard').classList.remove('hidden');
+    renderAudienceWizard(1);
+  }
+
+  function closeAudienceWizard() {
+    state.activeWizard = null;
+    state.wizardStep = 0;
+    state.wizardConditions = [];
+    document.getElementById('audience-wizard').classList.add('hidden');
+    document.getElementById('audiences-list-container').classList.remove('hidden');
+  }
+
   function renderProfileTable() {
     const tbody = document.getElementById('profile-table-body');
     tbody.innerHTML = MOCK_PROFILES.map(p => {
@@ -770,7 +1048,7 @@
   }
 
   // ==================== EXPOSE FOR TASK 9 ====================
-  window.__app = { CONFIG, state, dom, updateProfileField, switchView };
+  window.__app = { CONFIG, state, dom, updateProfileField, switchView, openAudienceWizard, closeAudienceWizard, computeAudienceMembers };
 
   // Start the app
   init();
