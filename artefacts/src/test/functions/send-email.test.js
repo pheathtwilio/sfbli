@@ -57,11 +57,24 @@ describe('send-email function', () => {
     }));
   });
 
-  test('returns error when templateId is missing', async () => {
+  test('returns error when templateId is missing and no env fallback', async () => {
     const event = { to: 'agent@example.com' };
     await handler(mockContext, event, mockCallback);
     expect(mockCallback).toHaveBeenCalledWith(null, expect.objectContaining({
-      _body: { error: expect.any(String) }
+      _body: expect.objectContaining({ error: expect.stringContaining('Missing required fields') })
+    }));
+  });
+
+  test('falls back to PROMO_EMAIL_TEMPLATE_ID env var when templateId not provided', async () => {
+    mockContext.PROMO_EMAIL_TEMPLATE_ID = 'd-promo-default';
+    const event = { to: 'agent@example.com' };
+    await handler(mockContext, event, mockCallback);
+    expect(sgMail.send).toHaveBeenCalledWith(expect.objectContaining({
+      to: 'agent@example.com',
+      templateId: 'd-promo-default'
+    }));
+    expect(mockCallback).toHaveBeenCalledWith(null, expect.objectContaining({
+      _body: { status: 'sent', messageId: 'msg_123' }
     }));
   });
 

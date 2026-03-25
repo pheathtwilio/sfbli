@@ -55,15 +55,28 @@ describe('send-rcs function', () => {
     const event = { contentSid: 'HX1234567890' };
     await handler(mockContext, event, mockCallback);
     expect(mockCallback).toHaveBeenCalledWith(null, expect.objectContaining({
-      _body: { error: 'Missing required fields: to, contentSid' }
+      _body: expect.objectContaining({ error: expect.stringContaining('Missing required fields') })
     }));
   });
 
-  test('returns error when contentSid is missing', async () => {
+  test('returns error when contentSid is missing and no env fallback', async () => {
     const event = { to: '+15559876543' };
     await handler(mockContext, event, mockCallback);
     expect(mockCallback).toHaveBeenCalledWith(null, expect.objectContaining({
-      _body: { error: 'Missing required fields: to, contentSid' }
+      _body: expect.objectContaining({ error: expect.stringContaining('Missing required fields') })
+    }));
+  });
+
+  test('falls back to PROMO_CONTENT_SID env var when contentSid not provided', async () => {
+    mockContext.PROMO_CONTENT_SID = 'HX_PROMO_DEFAULT';
+    const event = { to: '+15559876543' };
+    await handler(mockContext, event, mockCallback);
+    expect(mockClient.messages.create).toHaveBeenCalledWith(expect.objectContaining({
+      to: '+15559876543',
+      contentSid: 'HX_PROMO_DEFAULT'
+    }));
+    expect(mockCallback).toHaveBeenCalledWith(null, expect.objectContaining({
+      _body: { messageSid: 'SM1234567890', status: 'queued' }
     }));
   });
 

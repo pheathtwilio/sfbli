@@ -12,10 +12,11 @@ exports.handler = async function (context, event, callback) {
   }
 
   const { to, contentSid, contentVariables } = event;
+  const resolvedContentSid = contentSid || context.PROMO_CONTENT_SID;
 
-  if (!to || !contentSid) {
+  if (!to || !resolvedContentSid) {
     response.setStatusCode(400);
-    response.setBody({ error: 'Missing required fields: to, contentSid' });
+    response.setBody({ error: 'Missing required fields: to, contentSid (or set PROMO_CONTENT_SID env var)' });
     return callback(null, response);
   }
 
@@ -24,7 +25,7 @@ exports.handler = async function (context, event, callback) {
     const message = await client.messages.create({
       messagingServiceSid: context.MESSAGING_SERVICE_SID,
       to,
-      contentSid,
+      contentSid: resolvedContentSid,
       contentVariables: contentVariables || '{}'
     });
 

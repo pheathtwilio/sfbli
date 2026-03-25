@@ -14,10 +14,11 @@ exports.handler = async function (context, event, callback) {
   }
 
   const { to, templateId, dynamicData } = event;
+  const resolvedTemplateId = templateId || context.PROMO_EMAIL_TEMPLATE_ID;
 
-  if (!to || !templateId) {
+  if (!to || !resolvedTemplateId) {
     response.setStatusCode(400);
-    response.setBody({ error: 'Missing required fields: to, templateId' });
+    response.setBody({ error: 'Missing required fields: to, templateId (or set PROMO_EMAIL_TEMPLATE_ID env var)' });
     return callback(null, response);
   }
 
@@ -28,7 +29,7 @@ exports.handler = async function (context, event, callback) {
     const [result] = await sgMail.send({
       to,
       from: context.SENDGRID_FROM_EMAIL,
-      templateId,
+      templateId: resolvedTemplateId,
       dynamicTemplateData: parsedData
     });
 
