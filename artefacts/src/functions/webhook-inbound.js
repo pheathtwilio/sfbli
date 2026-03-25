@@ -1,27 +1,31 @@
-// Load shared message store — Runtime.getAssets() in Twilio, direct require in tests
-let store;
-try {
-  const asset = Runtime.getAssets()['/message-store.js'];
-  store = require(asset.path);
-} catch (e) {
-  store = require('../assets/message-store.private');
-}
-
-// Re-export for tests
-exports._getMessages = store.getMessages;
-exports._clearMessages = store.clearMessages;
-exports.messageStore = store.messageStore;
-
 exports.handler = async function (context, event, callback) {
   const { From, Body, MessageSid } = event;
 
-  store.addMessage({
-    from: From,
-    body: Body,
-    messageSid: MessageSid,
-    channel: 'sms',
-    timestamp: Date.now()
-  });
+  try {
+    const client = context.getTwilioClient();
+    const syncService = client.sync.v1.services('default');
+
+    // Ensure the SyncList exists
+    try {
+      await syncService.syncLists('inbound_messages').fetch();
+    } catch (e) {
+      if (e.code === 20404) {
+        await syncService.syncLists.create({ uniqueName: 'inbound_messages' });
+      }
+    }
+
+    await syncService.syncLists('inbound_messages').syncListItems.create({
+      data: {
+        from: From,
+        body: Body,
+        messageSid: MessageSid,
+        channel: 'sms',
+        timestamp: Date.now()
+      }
+    });
+  } catch (err) {
+    console.error('Failed to store inbound message:', err.message);
+  }
 
   const twiml = new Twilio.twiml.MessagingResponse();
   return callback(null, twiml);
