@@ -532,7 +532,8 @@
     'sources': 'view-sources',
     'profile-explorer': 'view-profile-explorer',
     'home': 'view-events',
-    'engage': 'view-events'
+    'audiences': 'view-audiences',
+    'journeys': 'view-journeys'
   };
 
   function switchView(viewName) {

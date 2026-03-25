@@ -8,84 +8,102 @@ test.describe('Dashboard Layout', () => {
     await expect(page.locator('.right-panel')).toBeVisible();
   });
 
-  test('sidebar has navigation items', async ({ page }) => {
+  test('sidebar has Segment-style navigation', async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('.sidebar-item')).toHaveCount(4);
-    await expect(page.locator('.sidebar-item.active')).toContainText('Events');
+    await expect(page.locator('.workspace-name')).toContainText('SFBLI');
+    await expect(page.locator('.sidebar-section-header')).toHaveCount(3);
+    await expect(page.locator('.sidebar-subitem.active')).toContainText('Sources');
+  });
+
+  test('starts on Sources view', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('#view-sources')).toBeVisible();
+    await expect(page.locator('#view-profile-explorer')).toBeHidden();
+    await expect(page.locator('#view-events')).toBeHidden();
   });
 });
 
-test.describe('Scenario Playback', () => {
-  test('events appear in the event stream', async ({ page }) => {
+test.describe('Outreach Controls', () => {
+  test('outreach buttons are disabled on load', async ({ page }) => {
     await page.goto('/');
-    // Wait for first event (delay: 0)
-    await expect(page.locator('.event-item')).toHaveCount(1, { timeout: 2000 });
-    // Wait for more events
-    await page.waitForTimeout(9000);
-    const eventCount = await page.locator('.event-item').count();
-    expect(eventCount).toBeGreaterThanOrEqual(4);
+    await expect(page.locator('#btn-rcs')).toBeDisabled();
+    await expect(page.locator('#btn-email')).toBeDisabled();
+    await expect(page.locator('#btn-voice')).toBeDisabled();
   });
 
-  test('profile updates after scenario completes', async ({ page }) => {
+  test('conversation input is disabled on load', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(9000);
-    await expect(page.locator('[data-field="status"]')).toContainText('At Risk');
-    await expect(page.locator('[data-field="engagement_score"]')).toContainText('45');
-  });
-
-  test('replay button restarts events', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForTimeout(9000);
-    await page.click('#replay-btn');
-    await page.waitForTimeout(1000);
-    const eventCount = await page.locator('.event-item').count();
-    expect(eventCount).toBeGreaterThanOrEqual(1);
+    await expect(page.locator('#conversation-input')).toBeDisabled();
+    await expect(page.locator('#conversation-send-btn')).toBeDisabled();
   });
 });
 
-test.describe('Profile Editing', () => {
-  test('edit button toggles contentEditable on profile fields', async ({ page }) => {
+test.describe('Profile Explorer', () => {
+  test('navigate to profile explorer shows profile list', async ({ page }) => {
     await page.goto('/');
-    await page.click('#edit-profile-btn');
-    const nameField = page.locator('[data-field="name"]');
-    await expect(nameField).toHaveAttribute('contenteditable', 'true');
-    await page.click('#edit-profile-btn');
-    await expect(nameField).toHaveAttribute('contenteditable', 'false');
+    await page.waitForSelector('#view-sources', { state: 'visible' });
+    await page.evaluate(() => window.__app.switchView('profile-explorer'));
+    await expect(page.locator('#view-profile-explorer')).toBeVisible();
+    await expect(page.locator('#profile-table-body tr')).toHaveCount(6);
+  });
+
+  test('clicking a profile shows detail view with tabs', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForSelector('#view-sources', { state: 'visible' });
+    await page.evaluate(() => window.__app.switchView('profile-explorer'));
+    await expect(page.locator('#view-profile-explorer')).toBeVisible();
+    await page.waitForFunction(() => document.querySelectorAll('#profile-table-body tr').length === 6);
+    await page.evaluate(() => {
+      const row = document.querySelector('#profile-table-body tr:first-child');
+      row.click();
+    });
+    await page.waitForFunction(() => !document.getElementById('profile-detail').classList.contains('hidden'));
+    await expect(page.locator('.profile-detail-name')).toContainText('Paul Heath');
+    await expect(page.locator('.profile-tab')).toHaveCount(5);
+  });
+
+  test('events tab animates live events and enables outreach', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForSelector('#view-sources', { state: 'visible' });
+    await page.evaluate(() => window.__app.switchView('profile-explorer'));
+    await page.waitForFunction(() => document.querySelectorAll('#profile-table-body tr').length === 6);
+    await page.evaluate(() => document.querySelector('#profile-table-body tr:first-child').click());
+    await page.waitForFunction(() => !document.getElementById('profile-detail').classList.contains('hidden'));
+    await page.evaluate(() => document.querySelector('.profile-tab[data-tab="events"]').click());
+
+    // Historical events appear immediately
+    await expect(page.locator('.profile-event-row')).toHaveCount(4, { timeout: 1000 });
+
+    // Live events animate in
+    await expect(page.locator('.profile-event-row')).toHaveCount(5, { timeout: 3000 });
+    await expect(page.locator('.profile-event-row')).toHaveCount(6, { timeout: 5000 });
+    await expect(page.locator('.profile-event-row')).toHaveCount(7, { timeout: 8000 });
+
+    // form_abandon should enable outreach
+    await expect(page.locator('#btn-rcs')).toBeEnabled();
+    await expect(page.locator('#btn-email')).toBeEnabled();
+    await expect(page.locator('#btn-voice')).toBeEnabled();
+    await expect(page.locator('#conversation-input')).toBeEnabled();
   });
 });
 
-test.describe('Channel Controls', () => {
-  test('RCS button opens template selector', async ({ page }) => {
+test.describe('Conversation Input', () => {
+  test('conversation input accepts text when enabled', async ({ page }) => {
     await page.goto('/');
-    await page.click('#btn-rcs');
-    await expect(page.locator('#template-selector')).toBeVisible();
-    await expect(page.locator('#channel-controls')).toBeHidden();
-  });
+    await page.waitForSelector('#view-sources', { state: 'visible' });
 
-  test('cancel button closes template selector', async ({ page }) => {
-    await page.goto('/');
-    await page.click('#btn-rcs');
-    await page.click('#template-cancel-btn');
-    await expect(page.locator('#template-selector')).toBeHidden();
-    await expect(page.locator('#channel-controls')).toBeVisible();
-  });
+    // Enable outreach directly
+    await page.evaluate(() => window.__app.switchView('profile-explorer'));
+    await page.waitForFunction(() => document.querySelectorAll('#profile-table-body tr').length === 6);
+    await page.evaluate(() => document.querySelector('#profile-table-body tr:first-child').click());
+    await page.waitForFunction(() => !document.getElementById('profile-detail').classList.contains('hidden'));
+    await page.evaluate(() => document.querySelector('.profile-tab[data-tab="events"]').click());
 
-  test('email button opens template selector', async ({ page }) => {
-    await page.goto('/');
-    await page.click('#btn-email');
-    await expect(page.locator('#template-selector')).toBeVisible();
-  });
-});
+    // Wait for form_abandon to enable
+    await expect(page.locator('#conversation-input')).toBeEnabled({ timeout: 8000 });
 
-test.describe('Brand Loading', () => {
-  test('loads default brand config', async ({ page }) => {
-    await page.goto('/');
-    await expect(page.locator('[data-field="name"]')).toContainText('Marcus Rivera');
-    await expect(page.locator('[data-field="region"]')).toContainText('Southeast');
-  });
-
-  test('scenario query param is respected', async ({ page }) => {
-    await page.goto('/?scenario=default');
-    await expect(page.locator('.event-item')).toHaveCount(1, { timeout: 2000 });
+    // Type into the input
+    await page.fill('#conversation-input', 'Hello from the demo');
+    await expect(page.locator('#conversation-input')).toHaveValue('Hello from the demo');
   });
 });
