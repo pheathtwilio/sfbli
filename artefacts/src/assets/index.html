@@ -128,6 +128,7 @@
                 <span class="schema-tag">tenure_years</span>
                 <span class="schema-tag">appointment_status</span>
                 <span class="schema-tag">last_contacted</span>
+                <span class="schema-tag">preferred_channel</span>
               </div>
               <h4>Events</h4>
               <div class="schema-tags">
@@ -322,6 +323,10 @@
         <h2>Conversation</h2>
         <div class="conversation-thread" id="conversation-thread">
           <div class="conversation-empty">No messages yet. Send outreach to begin.</div>
+        </div>
+        <div class="conversation-input">
+          <input type="text" class="conversation-input-field" id="conversation-input" placeholder="Type a reply..." disabled>
+          <button class="btn btn-primary btn-sm" id="conversation-send-btn" disabled>Send</button>
         </div>
       </section>
     </aside>

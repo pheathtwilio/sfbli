@@ -18,7 +18,12 @@
     pollTimer: null,
     lastPollTimestamp: 0,
     activeChannel: null,
-    currentView: 'sources'
+    currentView: 'sources',
+    outreachEnabled: false,
+    audiences: [],
+    journeys: [],
+    activeWizard: null,
+    wizardStep: 0
   };
 
   // ==================== DOM REFERENCES ====================
@@ -40,7 +45,9 @@
     btnVoice: document.getElementById('btn-voice'),
     statusRcs: document.getElementById('status-rcs'),
     statusEmail: document.getElementById('status-email'),
-    statusVoice: document.getElementById('status-voice')
+    statusVoice: document.getElementById('status-voice'),
+    conversationInput: document.getElementById('conversation-input'),
+    conversationSendBtn: document.getElementById('conversation-send-btn')
   };
 
   // ==================== BRAND LOADING ====================
@@ -230,6 +237,32 @@
         el.contentEditable = 'true';
       });
       dom.editProfileBtn.textContent = 'Save';
+    }
+  }
+
+  // ==================== OUTREACH CONTROLS ====================
+  function setOutreachEnabled(enabled) {
+    state.outreachEnabled = enabled;
+    dom.btnRcs.disabled = !enabled;
+    dom.btnEmail.disabled = !enabled;
+    dom.btnVoice.disabled = !enabled;
+    dom.conversationInput.disabled = !enabled;
+    dom.conversationSendBtn.disabled = !enabled;
+  }
+
+  async function sendReply(body) {
+    if (!state.profile.phone || !body.trim()) return;
+    try {
+      const resp = await fetch(`${CONFIG.functionsBaseUrl}/send-reply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: state.profile.phone, body: body.trim() })
+      });
+      const data = await resp.json();
+      if (data.error) throw new Error(data.error);
+      addConversationMessage('outbound', 'sms', body.trim());
+    } catch (e) {
+      addConversationMessage('system', 'sms', `Failed to send: ${e.message}`);
     }
   }
 
@@ -457,6 +490,21 @@
       });
     }
 
+    // Conversation reply input
+    dom.conversationSendBtn.addEventListener('click', () => {
+      const body = dom.conversationInput.value;
+      if (body.trim()) {
+        sendReply(body);
+        dom.conversationInput.value = '';
+      }
+    });
+    dom.conversationInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && dom.conversationInput.value.trim()) {
+        sendReply(dom.conversationInput.value);
+        dom.conversationInput.value = '';
+      }
+    });
+
     dom.templateCancelBtn.addEventListener('click', hideTemplateSelector);
     dom.templateSendBtn.addEventListener('click', () => {
       const selectedId = dom.templateDropdown.value;
@@ -533,14 +581,18 @@
       item.addEventListener('click', () => switchView(item.dataset.view));
     });
 
-    // Sub-items
+    // Sub-items — stop propagation so section header toggle doesn't fire
     document.querySelectorAll('.sidebar-subitem[data-view]').forEach(item => {
-      item.addEventListener('click', () => switchView(item.dataset.view));
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        switchView(item.dataset.view);
+      });
     });
 
-    // Section expand/collapse
+    // Section expand/collapse — only toggle, never navigate
     document.querySelectorAll('.sidebar-section-header').forEach(header => {
-      header.addEventListener('click', () => {
+      header.addEventListener('click', (e) => {
+        e.stopPropagation();
         const subnav = header.nextElementSibling;
         if (subnav) subnav.classList.toggle('open');
       });
@@ -549,12 +601,12 @@
 
   // ==================== PROFILE EXPLORER ====================
   const MOCK_PROFILES = [
-    { id: 'usr_001', name: 'Paul Heath', email: 'pheath@twilio.com', phone: '+13125689550', region: 'Southeast', status: 'At Risk', engagement_score: 45, agent_id: 'AGT-2847', license_state: 'FL', last_contacted: '14 days ago', policies_sold_ytd: 18, sales_target_ytd: 40, target_attainment: '45%', region_rank: '12 of 15', avg_policy_value: '$4,200', book_of_business: '$1.2M', tenure_years: 3, appointment_status: 'Active' },
-    { id: 'usr_002', name: 'Carter Howard', email: 'cahoward@twilio.com', phone: '+14073047101', region: 'West', status: 'Active', engagement_score: 89, agent_id: 'AGT-1923', license_state: 'CA', last_contacted: '2 days ago', policies_sold_ytd: 34, sales_target_ytd: 40, target_attainment: '85%', region_rank: '3 of 22', avg_policy_value: '$6,800', book_of_business: '$3.8M', tenure_years: 7, appointment_status: 'Active' },
-    { id: 'usr_003', name: 'James Okafor', email: 'james.okafor@example.com', phone: '+1 (678) 555-0183', region: 'Southeast', status: 'Active', engagement_score: 76, agent_id: 'AGT-3301', license_state: 'GA', last_contacted: '5 days ago', policies_sold_ytd: 27, sales_target_ytd: 35, target_attainment: '77%', region_rank: '6 of 15', avg_policy_value: '$3,900', book_of_business: '$2.1M', tenure_years: 5, appointment_status: 'Active' },
-    { id: 'usr_004', name: 'Emily Watson', email: 'emily.watson@example.com', phone: '+1 (214) 555-0321', region: 'Central', status: 'Inactive', engagement_score: 23, agent_id: 'AGT-3102', license_state: 'TX', last_contacted: '32 days ago', policies_sold_ytd: 4, sales_target_ytd: 30, target_attainment: '13%', region_rank: '18 of 18', avg_policy_value: '$2,100', book_of_business: '$420K', tenure_years: 1, appointment_status: 'Under Review' },
-    { id: 'usr_005', name: 'Roberto Mendez', email: 'roberto.mendez@example.com', phone: '+1 (305) 555-0456', region: 'Southeast', status: 'Active', engagement_score: 91, agent_id: 'AGT-2890', license_state: 'FL', last_contacted: '1 day ago', policies_sold_ytd: 42, sales_target_ytd: 40, target_attainment: '105%', region_rank: '1 of 15', avg_policy_value: '$7,500', book_of_business: '$5.4M', tenure_years: 10, appointment_status: 'Active' },
-    { id: 'usr_006', name: 'Linda Park', email: 'linda.park@example.com', phone: '+1 (773) 555-0199', region: 'Midwest', status: 'At Risk', engagement_score: 38, agent_id: 'AGT-4010', license_state: 'IL', last_contacted: '21 days ago', policies_sold_ytd: 9, sales_target_ytd: 30, target_attainment: '30%', region_rank: '11 of 12', avg_policy_value: '$3,100', book_of_business: '$890K', tenure_years: 2, appointment_status: 'Active' }
+    { id: 'usr_001', name: 'Paul Heath', email: 'pheath@twilio.com', phone: '+13125689550', region: 'Southeast', status: 'At Risk', engagement_score: 45, agent_id: 'AGT-2847', license_state: 'FL', last_contacted: '14 days ago', policies_sold_ytd: 18, sales_target_ytd: 40, target_attainment: '65%', region_rank: '5 of 15', avg_policy_value: '$4,200', book_of_business: '$1.2M', tenure_years: 3, appointment_status: 'Active', preferred_channel: 'rcs_sms' },
+    { id: 'usr_002', name: 'Carter Howard', email: 'cahoward@twilio.com', phone: '+14073047101', region: 'West', status: 'Active', engagement_score: 89, agent_id: 'AGT-1923', license_state: 'CA', last_contacted: '2 days ago', policies_sold_ytd: 34, sales_target_ytd: 40, target_attainment: '85%', region_rank: '3 of 22', avg_policy_value: '$6,800', book_of_business: '$3.8M', tenure_years: 7, appointment_status: 'Active', preferred_channel: 'rcs_sms' },
+    { id: 'usr_003', name: 'James Okafor', email: 'james.okafor@example.com', phone: '+1 (678) 555-0183', region: 'Southeast', status: 'Active', engagement_score: 76, agent_id: 'AGT-3301', license_state: 'GA', last_contacted: '5 days ago', policies_sold_ytd: 27, sales_target_ytd: 35, target_attainment: '77%', region_rank: '6 of 15', avg_policy_value: '$3,900', book_of_business: '$2.1M', tenure_years: 5, appointment_status: 'Active', preferred_channel: 'email' },
+    { id: 'usr_004', name: 'Emily Watson', email: 'emily.watson@example.com', phone: '+1 (214) 555-0321', region: 'Central', status: 'Inactive', engagement_score: 23, agent_id: 'AGT-3102', license_state: 'TX', last_contacted: '32 days ago', policies_sold_ytd: 4, sales_target_ytd: 30, target_attainment: '13%', region_rank: '18 of 18', avg_policy_value: '$2,100', book_of_business: '$420K', tenure_years: 1, appointment_status: 'Under Review', preferred_channel: 'sms' },
+    { id: 'usr_005', name: 'Roberto Mendez', email: 'roberto.mendez@example.com', phone: '+1 (305) 555-0456', region: 'Southeast', status: 'Active', engagement_score: 91, agent_id: 'AGT-2890', license_state: 'FL', last_contacted: '1 day ago', policies_sold_ytd: 42, sales_target_ytd: 40, target_attainment: '105%', region_rank: '1 of 15', avg_policy_value: '$7,500', book_of_business: '$5.4M', tenure_years: 10, appointment_status: 'Active', preferred_channel: 'email' },
+    { id: 'usr_006', name: 'Linda Park', email: 'linda.park@example.com', phone: '+1 (773) 555-0199', region: 'Midwest', status: 'At Risk', engagement_score: 38, agent_id: 'AGT-4010', license_state: 'IL', last_contacted: '21 days ago', policies_sold_ytd: 9, sales_target_ytd: 30, target_attainment: '30%', region_rank: '11 of 12', avg_policy_value: '$3,100', book_of_business: '$890K', tenure_years: 2, appointment_status: 'Active', preferred_channel: 'sms' }
   ];
 
   // Historical events shown immediately when Events tab opens
@@ -645,7 +697,8 @@
         'region_rank': profile.region_rank,
         'avg_policy_value': profile.avg_policy_value,
         'book_of_business': profile.book_of_business,
-        'tenure_years': profile.tenure_years
+        'tenure_years': profile.tenure_years,
+        'preferred_channel': profile.preferred_channel
       };
       container.innerHTML = `<table class="traits-table">${Object.entries(traits).map(([k, v]) =>
         `<tr><td>${k}</td><td>${v}</td></tr>`
@@ -668,6 +721,9 @@
           row.innerHTML = `<span class="profile-event-dot${isWarning ? ' dot-warning' : ''}"></span><span class="profile-event-name">${e.name}</span><span class="profile-event-time">${e.time}</span>`;
           list.prepend(row);
           setTimeout(() => row.classList.remove('entering'), 350);
+          if (e.name === 'form_abandon') {
+            setOutreachEnabled(true);
+          }
         }, e.delay);
       });
 
@@ -698,12 +754,16 @@
 
   // ==================== INIT ====================
   async function init() {
+    // Clear previous session messages
+    fetch(`${CONFIG.functionsBaseUrl}/clear-messages`, { method: 'POST' }).catch(() => {});
+
     await loadBrand(CONFIG.brand);
     await loadTemplates();
     renderProfileTable();
     setupSidebarListeners();
-    startPolling();
     setupEventListeners();
+    setOutreachEnabled(false);
+    startPolling();
     // Start on Sources view (default)
     switchView('sources');
   }
