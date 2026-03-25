@@ -484,6 +484,10 @@
       btnNewAudience.addEventListener('click', openAudienceWizard);
     }
 
+    // Journey wizard
+    document.getElementById('btn-new-journey').addEventListener('click', openJourneyWizard);
+    document.querySelector('.btn-new-journey-inline')?.addEventListener('click', openJourneyWizard);
+
     // Profile search filter
     const searchInput = document.getElementById('profile-search-input');
     if (searchInput) {
@@ -572,6 +576,12 @@
       if (parentSection) {
         parentSection.querySelector('.sidebar-section-header').classList.add('active');
       }
+    }
+
+    if (viewName === 'journeys') {
+      renderJourneysList();
+      document.getElementById('journeys-list-container').classList.remove('hidden');
+      document.getElementById('journey-wizard').classList.add('hidden');
     }
 
     if (viewName === 'audiences') {
@@ -1199,6 +1209,233 @@
     }
   }
 
+  // ==================== JOURNEY WIZARD ====================
+  function renderJourneyWizard(step) {
+    const container = document.getElementById('journey-wizard');
+    const steps = ['Select Trigger', 'Set Up', 'Build'];
+    const header = renderWizardHeader('Create Journey', steps, step);
+
+    let content = '';
+
+    if (step === 1) {
+      content = `
+        <div style="display:flex;gap:24px;padding:24px;">
+          <div style="flex:1;">
+            <h3 class="wizard-section-title">Select a Trigger</h3>
+            <div class="trigger-option dimmed">
+              <span>&#9881;</span>
+              <div>
+                <div style="font-weight:600;font-size:14px;">Profile performs an event</div>
+                <div style="font-size:12px;color:#6b7280;">Trigger when a profile performs a specific event</div>
+              </div>
+            </div>
+            <div class="trigger-option selected">
+              <span>&#128100;</span>
+              <div>
+                <div style="font-weight:600;font-size:14px;">Profile enters an audience</div>
+                <div style="font-size:12px;color:#6b7280;">Trigger when a profile enters a specific audience</div>
+              </div>
+            </div>
+          </div>
+          <div style="width:300px;">
+            <div class="trigger-description">
+              <h4 style="font-size:14px;font-weight:600;margin-bottom:8px;">Profile enters an audience</h4>
+              <p style="font-size:13px;color:#6b7280;">This trigger fires when a profile is added to a selected audience. Use this to start journeys based on audience membership changes.</p>
+            </div>
+          </div>
+        </div>`;
+    } else if (step === 2) {
+      const audienceOptions = state.audiences.map(a =>
+        `<option value="${a.key}">${a.name}</option>`
+      ).join('');
+      content = `
+        <div class="journey-form">
+          <h3 class="wizard-section-title">Set Up Your Journey</h3>
+          <div class="wizard-form-group">
+            <label>Name</label>
+            <input type="text" data-field="journey-name" placeholder="e.g. Re-engagement campaign" value="${state._journeyName || ''}">
+          </div>
+          <div class="wizard-form-group">
+            <label>Description</label>
+            <textarea data-field="journey-description" placeholder="Describe this journey...">${state._journeyDescription || ''}</textarea>
+          </div>
+          <div class="wizard-form-group">
+            <label>Entry audience</label>
+            <select data-field="journey-audience">
+              <option value="">Select an audience...</option>
+              ${audienceOptions}
+            </select>
+          </div>
+          <div class="wizard-form-group" style="opacity:0.5;">
+            <label><input type="checkbox" disabled> Include anonymous profiles</label>
+          </div>
+          <div class="wizard-form-group">
+            <label>Entry frequency</label>
+            <div class="frequency-option selected">
+              <div style="font-weight:600;font-size:14px;">One time</div>
+              <div style="font-size:12px;color:#6b7280;">Each profile enters the journey only once</div>
+            </div>
+            <div class="frequency-option dimmed">
+              <div style="font-weight:600;font-size:14px;">Re-enter after exiting</div>
+              <div style="font-size:12px;color:#6b7280;">Profiles can re-enter after they exit the journey</div>
+            </div>
+          </div>
+        </div>`;
+    } else if (step === 3) {
+      const audienceKey = state._journeyAudienceKey || '';
+      const audience = state.audiences.find(a => a.key === audienceKey);
+      const audienceName = audience ? audience.name : 'selected audience';
+      content = `
+        <div class="journey-canvas-layout">
+          <div class="journey-widget-panel">
+            <div class="widget-section-label">Flow Control</div>
+            <div class="widget-item">&#9202; Delay</div>
+            <div class="widget-item">&#9208; Hold until</div>
+            <div class="widget-item">&#128256; Data split</div>
+            <div class="widget-item">&#127922; Randomized split</div>
+            <div class="widget-section-label">Actions</div>
+            <div class="widget-item">&#128640; Send to destination</div>
+          </div>
+          <div class="journey-canvas">
+            <div class="canvas-node canvas-node-trigger">
+              <div class="canvas-node-type">Trigger</div>
+              <div class="canvas-node-label">new_promotion_published</div>
+              <div class="canvas-node-desc">When profile enters ${audienceName}</div>
+            </div>
+            <div class="canvas-connector"></div>
+            <div class="canvas-arrow"></div>
+            <div class="canvas-node canvas-node-destination">
+              <div class="canvas-node-type">Destination</div>
+              <div class="canvas-node-label">Send Interaction</div>
+              <div class="canvas-node-desc">Send via preferred channel</div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    // Footer
+    const isFirst = step === 1;
+    const isLast = step === 3;
+    let footerRight = '';
+    if (!isFirst) footerRight += '<button class="btn btn-secondary" id="journey-back-btn">Back</button>';
+    if (isLast) {
+      footerRight += '<button class="btn btn-primary" id="journey-save-btn">Save</button>';
+    } else if (step === 2) {
+      footerRight += '<button class="btn btn-primary" id="journey-build-btn">Build journey</button>';
+    } else {
+      footerRight += '<button class="btn btn-primary" id="journey-next-btn">Next</button>';
+    }
+
+    const footer = `
+      <div class="wizard-footer">
+        <button class="btn btn-secondary" id="journey-cancel-btn">Cancel</button>
+        <div class="wizard-footer-right">${footerRight}</div>
+      </div>`;
+
+    container.innerHTML = header + '<div class="wizard-body">' + content + '</div>' + footer;
+
+    // Wire buttons
+    document.getElementById('journey-cancel-btn').addEventListener('click', closeJourneyWizard);
+
+    const backBtn = document.getElementById('journey-back-btn');
+    if (backBtn) backBtn.addEventListener('click', () => {
+      // Save form values when going back from step 2
+      if (step === 2) {
+        const nameEl = container.querySelector('[data-field="journey-name"]');
+        const descEl = container.querySelector('[data-field="journey-description"]');
+        const audEl = container.querySelector('[data-field="journey-audience"]');
+        if (nameEl) state._journeyName = nameEl.value;
+        if (descEl) state._journeyDescription = descEl.value;
+        if (audEl) state._journeyAudienceKey = audEl.value;
+      }
+      state.wizardStep = step - 1;
+      renderJourneyWizard(state.wizardStep);
+    });
+
+    const nextBtn = document.getElementById('journey-next-btn');
+    if (nextBtn) nextBtn.addEventListener('click', () => {
+      state.wizardStep = step + 1;
+      renderJourneyWizard(state.wizardStep);
+    });
+
+    const buildBtn = document.getElementById('journey-build-btn');
+    if (buildBtn) buildBtn.addEventListener('click', () => {
+      // Save form values from step 2 before advancing
+      const nameEl = container.querySelector('[data-field="journey-name"]');
+      const descEl = container.querySelector('[data-field="journey-description"]');
+      const audEl = container.querySelector('[data-field="journey-audience"]');
+      if (nameEl) state._journeyName = nameEl.value;
+      if (descEl) state._journeyDescription = descEl.value;
+      if (audEl) state._journeyAudienceKey = audEl.value;
+      state.wizardStep = 3;
+      renderJourneyWizard(3);
+    });
+
+    const saveBtn = document.getElementById('journey-save-btn');
+    if (saveBtn) saveBtn.addEventListener('click', createJourney);
+  }
+
+  function openJourneyWizard() {
+    state.activeWizard = 'journey';
+    state.wizardStep = 1;
+    document.getElementById('journeys-list-container').classList.add('hidden');
+    document.getElementById('journey-wizard').classList.remove('hidden');
+    renderJourneyWizard(1);
+  }
+
+  function closeJourneyWizard() {
+    state.activeWizard = null;
+    state.wizardStep = 0;
+    document.getElementById('journey-wizard').classList.add('hidden');
+    document.getElementById('journeys-list-container').classList.remove('hidden');
+  }
+
+  function createJourney() {
+    const journey = {
+      name: state._journeyName || 'Untitled Journey',
+      description: state._journeyDescription || '',
+      audience_key: state._journeyAudienceKey || '',
+      trigger: 'new_promotion_published',
+      destination: 'Send Interaction',
+      status: 'Draft'
+    };
+    state.journeys.push(journey);
+    // Clean up temp state
+    delete state._journeyName;
+    delete state._journeyDescription;
+    delete state._journeyAudienceKey;
+    closeJourneyWizard();
+    renderJourneysList();
+  }
+
+  function renderJourneysList() {
+    const tbody = document.getElementById('journeys-table-body');
+    if (!tbody) return;
+
+    if (state.journeys.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#8a8f98;padding:40px 0;">
+        <div class="empty-state-icon">&#128736;</div>
+        <div class="empty-state-title">No journeys yet</div>
+        <div class="empty-state-text">Create your first journey to start engaging profiles across channels.</div>
+        <button class="btn btn-primary btn-sm btn-new-journey-inline">+ Create journey</button>
+      </td></tr>`;
+      // Re-wire inline button
+      const inlineBtn = tbody.querySelector('.btn-new-journey-inline');
+      if (inlineBtn) inlineBtn.addEventListener('click', openJourneyWizard);
+      return;
+    }
+
+    tbody.innerHTML = state.journeys.map(j => `
+      <tr>
+        <td style="font-weight:500;">${j.name}</td>
+        <td><span class="status-badge status-draft">Draft</span></td>
+        <td>${j.destination}</td>
+        <td>Paul Heath</td>
+        <td>Just now</td>
+      </tr>
+    `).join('');
+  }
+
   // ==================== INIT ====================
   async function init() {
     // Clear previous session messages
@@ -1216,7 +1453,7 @@
   }
 
   // ==================== EXPOSE FOR TASK 9 ====================
-  window.__app = { CONFIG, state, dom, updateProfileField, switchView, openAudienceWizard, closeAudienceWizard, computeAudienceMembers, createAudience, renderAudienceDetail, renderAudiencesList, showAudienceDetail };
+  window.__app = { CONFIG, state, dom, updateProfileField, switchView, openAudienceWizard, closeAudienceWizard, computeAudienceMembers, createAudience, renderAudienceDetail, renderAudiencesList, showAudienceDetail, openJourneyWizard, closeJourneyWizard, createJourney };
 
   // Start the app
   init();

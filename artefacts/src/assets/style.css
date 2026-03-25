@@ -1166,6 +1166,35 @@ html, body {
 .wizard-summary p { font-size: 13px; color: #6b7280; margin: 0 0 12px; }
 .wizard-summary ul { font-size: 12px; color: #6b7280; padding-left: 16px; margin: 0 0 16px; }
 
+/* ===== JOURNEY CANVAS ===== */
+.journey-canvas-layout { display: flex; min-height: 400px; }
+.journey-widget-panel { width: 200px; background: #fff; border-right: 1px solid var(--brand-border); padding: 20px 16px; }
+.widget-section-label { font-size: 11px; font-weight: 600; text-transform: uppercase; color: #9ca3af; margin: 16px 0 8px; }
+.widget-item { padding: 8px 10px; border: 1px solid var(--brand-border); border-radius: 6px; font-size: 13px; color: #374151; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+.journey-canvas { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; background: #f9fafb; }
+.canvas-node { background: #fff; border: 2px solid var(--brand-border); border-radius: 8px; padding: 14px 24px; text-align: center; }
+.canvas-node-trigger { border-color: #6c5ce7; }
+.canvas-node-destination { border-color: #10b981; }
+.canvas-node-type { font-size: 11px; font-weight: 600; text-transform: uppercase; color: #6b7280; margin-bottom: 4px; }
+.canvas-node-label { font-size: 14px; font-weight: 500; }
+.canvas-node-desc { font-size: 12px; color: #6b7280; }
+.canvas-connector { width: 2px; height: 32px; background: #d1d5db; margin: 0 auto; }
+.canvas-arrow { width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 8px solid #d1d5db; margin: 0 auto 4px; }
+
+/* ===== JOURNEY SETUP ===== */
+.journey-form { max-width: 600px; margin: 0 auto; padding: 40px 24px; }
+.journey-form label { font-size: 13px; font-weight: 500; display: block; margin-bottom: 4px; }
+.journey-form input, .journey-form textarea, .journey-form select { padding: 8px 12px; border: 1px solid var(--brand-border); border-radius: 6px; font-size: 14px; width: 100%; box-sizing: border-box; }
+.journey-form textarea { height: 70px; resize: vertical; font-size: 13px; }
+.journey-form select { background: #fff; }
+.trigger-option { border: 1px solid var(--brand-border); border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+.trigger-option.selected { border: 2px solid #6c5ce7; background: #faf9ff; }
+.trigger-option.dimmed { opacity: 0.5; cursor: default; }
+.trigger-description { background: #f9fafb; border-radius: 8px; padding: 24px; border: 1px solid var(--brand-border); }
+.frequency-option { border: 1px solid var(--brand-border); border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; }
+.frequency-option.selected { border: 2px solid #6c5ce7; background: #faf9ff; }
+.frequency-option.dimmed { opacity: 0.6; }
+
 /* ===== SCROLLBAR STYLING ===== */
 .event-list::-webkit-scrollbar,
 .conversation-thread::-webkit-scrollbar,
