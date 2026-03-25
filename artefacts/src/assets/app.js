@@ -1185,19 +1185,27 @@
       });
 
     } else if (tabName === 'audiences') {
-      container.innerHTML = `<div class="tag-list">
-        <span class="tag-item">High Value Customers</span>
-        <span class="tag-item">Southeast Region</span>
-        <span class="tag-item ${profile.predicted_churn === 'High' ? '' : 'tag-item-muted'}">Churn Risk</span>
-        <span class="tag-item">Cross-sell Eligible</span>
-      </div>`;
+      const matching = state.audiences.filter(a => a.members.includes(profile.id));
+      if (matching.length === 0) {
+        container.innerHTML = '<div class="empty-tab">No audiences yet</div>';
+      } else {
+        container.innerHTML = '<div class="tag-list">' +
+          matching.map(a => '<span class="tag-item">' + a.name + '</span>').join('') +
+          '</div>';
+      }
 
     } else if (tabName === 'journeys') {
-      container.innerHTML = `<div class="tag-list">
-        <span class="tag-item">Onboarding Complete</span>
-        <span class="tag-item ${profile.status === 'At Risk' ? '' : 'tag-item-muted'}">Re-engagement Campaign</span>
-        <span class="tag-item tag-item-muted">Policy Renewal (upcoming)</span>
-      </div>`;
+      const matchingJourneys = state.journeys.filter(j => {
+        const audience = state.audiences.find(a => a.key === j.audience_key);
+        return audience && audience.members.includes(profile.id);
+      });
+      if (matchingJourneys.length === 0) {
+        container.innerHTML = '<div class="empty-tab">No journeys yet</div>';
+      } else {
+        container.innerHTML = '<div class="tag-list">' +
+          matchingJourneys.map(j => '<span class="tag-item">' + j.name + '</span>').join('') +
+          '</div>';
+      }
 
     } else if (tabName === 'identities') {
       container.innerHTML = `<table class="traits-table">
