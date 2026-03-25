@@ -574,6 +574,14 @@
       }
     }
 
+    if (viewName === 'audiences') {
+      renderAudiencesList();
+      // Show list, hide wizard and detail
+      document.getElementById('audiences-list-container').classList.remove('hidden');
+      document.getElementById('audience-wizard').classList.add('hidden');
+      document.getElementById('audience-detail').classList.add('hidden');
+    }
+
     // If switching to events view and scenario hasn't played, trigger it
     if (viewName === 'home' || viewName === 'engage') {
       if (state.events.length === 0) {
@@ -854,7 +862,7 @@
 
     const createBtn = document.getElementById('wizard-create-btn');
     if (createBtn) createBtn.addEventListener('click', () => {
-      closeAudienceWizard();
+      createAudience();
     });
 
     // Wire condition builder interactivity for step 2
@@ -901,6 +909,166 @@
     state.wizardConditions = [];
     document.getElementById('audience-wizard').classList.add('hidden');
     document.getElementById('audiences-list-container').classList.remove('hidden');
+  }
+
+  function createAudience() {
+    const name = document.querySelector('[data-field="audience-name"]').value.trim();
+    const desc = document.querySelector('[data-field="audience-description"]')?.value?.trim() || '';
+    if (!name) return;
+
+    const audience = {
+      name: name,
+      key: name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, ''),
+      description: desc,
+      conditions: [...state.wizardConditions],
+      destination: 'Send Interaction',
+      members: computeAudienceMembers(state.wizardConditions).map(p => p.id)
+    };
+
+    state.audiences.push(audience);
+    state.activeWizard = null;
+    state.wizardStep = 0;
+    state.wizardConditions = [];
+    document.getElementById('audience-wizard').classList.add('hidden');
+    renderAudienceDetail(audience);
+  }
+
+  function renderAudienceDetail(audience) {
+    const detailEl = document.getElementById('audience-detail');
+    const listEl = document.getElementById('audiences-list-container');
+    const wizardEl = document.getElementById('audience-wizard');
+
+    listEl.classList.add('hidden');
+    wizardEl.classList.add('hidden');
+    detailEl.classList.remove('hidden');
+
+    const memberProfiles = audience.members.map(id => MOCK_PROFILES.find(p => p.id === id)).filter(Boolean);
+    const memberCount = memberProfiles.length;
+
+    const activityTimes = ['3 days ago', '5 days ago', '1 day ago', '7 days ago', '2 days ago', '4 days ago'];
+
+    const profileRows = memberProfiles.map((p, i) => `
+      <tr>
+        <td>${p.name}</td>
+        <td>${p.email}</td>
+        <td>${activityTimes[i % activityTimes.length]}</td>
+        <td>${activityTimes[(i + 2) % activityTimes.length]}</td>
+      </tr>
+    `).join('');
+
+    detailEl.innerHTML = `
+      <div class="audience-detail-header">
+        <div class="wizard-breadcrumb">
+          Spaces / default / <a href="#" class="audience-back-link">Audiences</a> / ${audience.name}
+        </div>
+        <div class="audience-detail-title">${audience.name}</div>
+        <div class="audience-detail-meta">${audience.description || 'No description'}</div>
+      </div>
+
+      <div class="view-tabs">
+        <div class="view-tab active">Overview</div>
+        <div class="view-tab">Builder</div>
+        <div class="view-tab">Consumers</div>
+        <div class="view-tab">Settings</div>
+        <div class="view-tab">Alerts</div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:12px;margin:20px 0;">
+        <span style="font-weight:600;font-size:14px;">Enable Audience</span>
+        <div style="width:40px;height:22px;border-radius:11px;background:#52bd94;position:relative;cursor:pointer;">
+          <div style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;right:2px;"></div>
+        </div>
+      </div>
+
+      <div class="audience-stats">
+        <div>
+          <div class="audience-stat-value">${memberCount}</div>
+          <div class="audience-stat-label">Users</div>
+        </div>
+        <div>
+          <div class="audience-stat-value">1</div>
+          <div class="audience-stat-label">Connected Destinations</div>
+        </div>
+        <div>
+          <div class="audience-stat-value"><span class="status-badge status-enabled"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#52bd94;margin-right:6px;"></span>Enabled</span></div>
+          <div class="audience-stat-label">Status</div>
+        </div>
+      </div>
+
+      <h3 style="margin:28px 0 12px;font-size:16px;font-weight:600;">Identifier Breakdown</h3>
+      <table class="data-table">
+        <thead><tr><th>Identifier</th><th>Coverage</th></tr></thead>
+        <tbody>
+          <tr><td>email</td><td>100%</td></tr>
+          <tr><td>phone</td><td>100%</td></tr>
+          <tr><td>user_id</td><td>100%</td></tr>
+        </tbody>
+      </table>
+
+      <h3 style="margin:28px 0 12px;font-size:16px;font-weight:600;">Destinations</h3>
+      <p style="color:#8a8f98;font-size:13px;margin-bottom:12px;">This audience is synced to 1 destination</p>
+      <div class="destination-card">
+        <div class="destination-icon">&#128640;</div>
+        <div>
+          <div style="font-weight:600;">Send Interaction</div>
+          <div style="font-size:12px;color:#8a8f98;">PH Demo Space</div>
+        </div>
+      </div>
+
+      <h3 style="margin:28px 0 12px;font-size:16px;font-weight:600;">Audience Explorer</h3>
+      <input type="text" class="search-input" placeholder="Search profiles..." style="margin-bottom:12px;max-width:320px;">
+      <table class="data-table">
+        <thead><tr><th>Name</th><th>Email</th><th>First Activity</th><th>Last Activity</th></tr></thead>
+        <tbody>${profileRows}</tbody>
+      </table>
+    `;
+
+    // Wire breadcrumb back navigation
+    const backLink = detailEl.querySelector('.audience-back-link');
+    if (backLink) {
+      backLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        detailEl.classList.add('hidden');
+        listEl.classList.remove('hidden');
+        renderAudiencesList();
+      });
+    }
+  }
+
+  function renderAudiencesList() {
+    const tbody = document.getElementById('audiences-table-body');
+    if (!tbody) return;
+
+    if (state.audiences.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#8a8f98;padding:40px 0;">No audiences created yet. Click "New Audience" to get started.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = state.audiences.map(audience => `
+      <tr>
+        <td><a href="#" class="audience-name-link" data-audience-key="${audience.key}">${audience.name}</a></td>
+        <td><span class="status-badge status-enabled"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#52bd94;margin-right:6px;"></span>Enabled</span></td>
+        <td>${audience.members.length}</td>
+        <td>${audience.destination}</td>
+      </tr>
+    `).join('');
+
+    // Wire click handlers for audience name links
+    tbody.querySelectorAll('.audience-name-link').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const key = link.dataset.audienceKey;
+        const audience = state.audiences.find(a => a.key === key);
+        if (audience) showAudienceDetail(audience);
+      });
+    });
+  }
+
+  function showAudienceDetail(audience) {
+    document.getElementById('audiences-list-container').classList.add('hidden');
+    document.getElementById('audience-wizard').classList.add('hidden');
+    document.getElementById('audience-detail').classList.remove('hidden');
+    renderAudienceDetail(audience);
   }
 
   function renderProfileTable() {
@@ -1048,7 +1216,7 @@
   }
 
   // ==================== EXPOSE FOR TASK 9 ====================
-  window.__app = { CONFIG, state, dom, updateProfileField, switchView, openAudienceWizard, closeAudienceWizard, computeAudienceMembers };
+  window.__app = { CONFIG, state, dom, updateProfileField, switchView, openAudienceWizard, closeAudienceWizard, computeAudienceMembers, createAudience, renderAudienceDetail, renderAudiencesList, showAudienceDetail };
 
   // Start the app
   init();
