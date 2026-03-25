@@ -626,12 +626,24 @@
 
   // ==================== PROFILE EXPLORER ====================
   const MOCK_PROFILES = [
-    { id: 'usr_001', name: 'Paul Heath', email: 'pheath@twilio.com', phone: '+13125689550', region: 'Southeast', status: 'At Risk', engagement_score: 45, agent_id: 'AGT-2847', license_state: 'FL', last_contacted: '14 days ago', policies_sold_ytd: 18, sales_target_ytd: 40, target_attainment: '65%', region_rank: '5 of 15', avg_policy_value: '$4,200', book_of_business: '$1.2M', tenure_years: 3, appointment_status: 'Active', preferred_channel: 'rcs_sms' },
-    { id: 'usr_002', name: 'Carter Howard', email: 'cahoward@twilio.com', phone: '+14073047101', region: 'West', status: 'Active', engagement_score: 89, agent_id: 'AGT-1923', license_state: 'CA', last_contacted: '2 days ago', policies_sold_ytd: 34, sales_target_ytd: 40, target_attainment: '85%', region_rank: '3 of 22', avg_policy_value: '$6,800', book_of_business: '$3.8M', tenure_years: 7, appointment_status: 'Active', preferred_channel: 'rcs_sms' },
-    { id: 'usr_003', name: 'James Okafor', email: 'james.okafor@example.com', phone: '+1 (678) 555-0183', region: 'Southeast', status: 'Active', engagement_score: 76, agent_id: 'AGT-3301', license_state: 'GA', last_contacted: '5 days ago', policies_sold_ytd: 27, sales_target_ytd: 35, target_attainment: '77%', region_rank: '6 of 15', avg_policy_value: '$3,900', book_of_business: '$2.1M', tenure_years: 5, appointment_status: 'Active', preferred_channel: 'email' },
-    { id: 'usr_004', name: 'Emily Watson', email: 'emily.watson@example.com', phone: '+1 (214) 555-0321', region: 'Central', status: 'Inactive', engagement_score: 23, agent_id: 'AGT-3102', license_state: 'TX', last_contacted: '32 days ago', policies_sold_ytd: 4, sales_target_ytd: 30, target_attainment: '13%', region_rank: '18 of 18', avg_policy_value: '$2,100', book_of_business: '$420K', tenure_years: 1, appointment_status: 'Under Review', preferred_channel: 'sms' },
-    { id: 'usr_005', name: 'Roberto Mendez', email: 'roberto.mendez@example.com', phone: '+1 (305) 555-0456', region: 'Southeast', status: 'Active', engagement_score: 91, agent_id: 'AGT-2890', license_state: 'FL', last_contacted: '1 day ago', policies_sold_ytd: 42, sales_target_ytd: 40, target_attainment: '105%', region_rank: '1 of 15', avg_policy_value: '$7,500', book_of_business: '$5.4M', tenure_years: 10, appointment_status: 'Active', preferred_channel: 'email' },
-    { id: 'usr_006', name: 'Linda Park', email: 'linda.park@example.com', phone: '+1 (773) 555-0199', region: 'Midwest', status: 'At Risk', engagement_score: 38, agent_id: 'AGT-4010', license_state: 'IL', last_contacted: '21 days ago', policies_sold_ytd: 9, sales_target_ytd: 30, target_attainment: '30%', region_rank: '11 of 12', avg_policy_value: '$3,100', book_of_business: '$890K', tenure_years: 2, appointment_status: 'Active', preferred_channel: 'sms' }
+    // Agents
+    { id: 'usr_001', type: 'agent', name: 'Paul Heath', email: 'pheath@twilio.com', phone: '+13125689550', region: 'Southeast', status: 'At Risk', engagement_score: 45, agent_id: 'AGT-2847', license_state: 'FL', last_contacted: '14 days ago', policies_sold_ytd: 18, sales_target_ytd: 40, target_attainment: '65%', region_rank: '5 of 15', avg_policy_value: '$4,200', book_of_business: '$1.2M', tenure_years: 3, appointment_status: 'Active', preferred_channel: 'rcs_sms' },
+    { id: 'usr_002', type: 'agent', name: 'Carter Howard', email: 'cahoward@twilio.com', phone: '+14073047101', region: 'West', status: 'Active', engagement_score: 89, agent_id: 'AGT-1923', license_state: 'CA', last_contacted: '2 days ago', policies_sold_ytd: 34, sales_target_ytd: 40, target_attainment: '85%', region_rank: '3 of 22', avg_policy_value: '$6,800', book_of_business: '$3.8M', tenure_years: 7, appointment_status: 'Active', preferred_channel: 'rcs_sms' },
+    { id: 'usr_003', type: 'agent', name: 'James Okafor', email: 'james.okafor@example.com', phone: '+1 (678) 555-0183', region: 'Southeast', status: 'Active', engagement_score: 76, agent_id: 'AGT-3301', license_state: 'GA', last_contacted: '5 days ago', policies_sold_ytd: 27, sales_target_ytd: 35, target_attainment: '77%', region_rank: '6 of 15', avg_policy_value: '$3,900', book_of_business: '$2.1M', tenure_years: 5, appointment_status: 'Active', preferred_channel: 'email' },
+    { id: 'usr_004', type: 'agent', name: 'Emily Watson', email: 'emily.watson@example.com', phone: '+1 (214) 555-0321', region: 'Central', status: 'Inactive', engagement_score: 23, agent_id: 'AGT-3102', license_state: 'TX', last_contacted: '32 days ago', policies_sold_ytd: 4, sales_target_ytd: 30, target_attainment: '13%', region_rank: '18 of 18', avg_policy_value: '$2,100', book_of_business: '$420K', tenure_years: 1, appointment_status: 'Under Review', preferred_channel: 'sms' },
+    { id: 'usr_005', type: 'agent', name: 'Roberto Mendez', email: 'roberto.mendez@example.com', phone: '+1 (305) 555-0456', region: 'Southeast', status: 'Active', engagement_score: 91, agent_id: 'AGT-2890', license_state: 'FL', last_contacted: '1 day ago', policies_sold_ytd: 42, sales_target_ytd: 40, target_attainment: '105%', region_rank: '1 of 15', avg_policy_value: '$7,500', book_of_business: '$5.4M', tenure_years: 10, appointment_status: 'Active', preferred_channel: 'email' },
+    { id: 'usr_006', type: 'agent', name: 'Linda Park', email: 'linda.park@example.com', phone: '+1 (773) 555-0199', region: 'Midwest', status: 'At Risk', engagement_score: 38, agent_id: 'AGT-4010', license_state: 'IL', last_contacted: '21 days ago', policies_sold_ytd: 9, sales_target_ytd: 30, target_attainment: '30%', region_rank: '11 of 12', avg_policy_value: '$3,100', book_of_business: '$890K', tenure_years: 2, appointment_status: 'Active', preferred_channel: 'sms' },
+    // Customers
+    { id: 'cust_001', type: 'customer', name: 'Maria Santos', email: 'maria.santos@gmail.com', phone: '+1 (305) 555-0712', region: 'Southeast', status: 'Active', policy_type: 'Homeowners', policy_number: 'HO-2024-08341', premium_amount: '$2,400/yr', coverage_amount: '$350,000', claim_count: 0, customer_since: '2021', renewal_date: '2026-08-15', risk_score: 'Low', preferred_channel: 'email' },
+    { id: 'cust_002', type: 'customer', name: 'David Chen', email: 'david.chen@outlook.com', phone: '+1 (415) 555-0298', region: 'West', status: 'Active', policy_type: 'Auto', policy_number: 'AU-2023-15672', premium_amount: '$1,800/yr', coverage_amount: '$100,000', claim_count: 1, customer_since: '2019', renewal_date: '2026-05-01', risk_score: 'Medium', preferred_channel: 'rcs_sms' },
+    { id: 'cust_003', type: 'customer', name: 'Sarah Johnson', email: 'sarah.j@yahoo.com', phone: '+1 (214) 555-0834', region: 'Central', status: 'Active', policy_type: 'Homeowners', policy_number: 'HO-2022-29104', premium_amount: '$3,100/yr', coverage_amount: '$475,000', claim_count: 2, customer_since: '2018', renewal_date: '2026-11-20', risk_score: 'Medium', preferred_channel: 'sms' },
+    { id: 'cust_004', type: 'customer', name: 'Marcus Rivera', email: 'marcus.rivera@gmail.com', phone: '+1 (786) 555-0445', region: 'Southeast', status: 'Active', policy_type: 'Auto', policy_number: 'AU-2024-33218', premium_amount: '$1,200/yr', coverage_amount: '$75,000', claim_count: 0, customer_since: '2023', renewal_date: '2026-07-10', risk_score: 'Low', preferred_channel: 'rcs_sms' },
+    { id: 'cust_005', type: 'customer', name: 'Jennifer Kim', email: 'jen.kim@icloud.com', phone: '+1 (312) 555-0167', region: 'Midwest', status: 'At Risk', policy_type: 'Renters', policy_number: 'RE-2023-41057', premium_amount: '$600/yr', coverage_amount: '$30,000', claim_count: 0, customer_since: '2022', renewal_date: '2026-04-01', risk_score: 'High', preferred_channel: 'email' },
+    { id: 'cust_006', type: 'customer', name: 'Thomas Wright', email: 'tom.wright@hotmail.com', phone: '+1 (678) 555-0523', region: 'Southeast', status: 'Active', policy_type: 'Homeowners', policy_number: 'HO-2021-18945', premium_amount: '$4,200/yr', coverage_amount: '$620,000', claim_count: 1, customer_since: '2017', renewal_date: '2026-09-30', risk_score: 'Low', preferred_channel: 'sms' },
+    { id: 'cust_007', type: 'customer', name: 'Amanda Foster', email: 'amanda.foster@gmail.com', phone: '+1 (404) 555-0891', region: 'Southeast', status: 'Active', policy_type: 'Auto', policy_number: 'AU-2022-27563', premium_amount: '$2,100/yr', coverage_amount: '$150,000', claim_count: 3, customer_since: '2020', renewal_date: '2026-06-15', risk_score: 'High', preferred_channel: 'rcs_sms' },
+    { id: 'cust_008', type: 'customer', name: 'Robert Patel', email: 'r.patel@gmail.com', phone: '+1 (713) 555-0334', region: 'Central', status: 'Active', policy_type: 'Life', policy_number: 'LF-2020-09821', premium_amount: '$5,400/yr', coverage_amount: '$500,000', claim_count: 0, customer_since: '2016', renewal_date: '2026-12-01', risk_score: 'Low', preferred_channel: 'email' },
+    { id: 'cust_009', type: 'customer', name: 'Lisa Nguyen', email: 'lisa.nguyen@outlook.com', phone: '+1 (510) 555-0776', region: 'West', status: 'Active', policy_type: 'Homeowners', policy_number: 'HO-2023-52314', premium_amount: '$3,800/yr', coverage_amount: '$550,000', claim_count: 1, customer_since: '2019', renewal_date: '2026-10-15', risk_score: 'Medium', preferred_channel: 'sms' },
+    { id: 'cust_010', type: 'customer', name: 'James Morrison', email: 'j.morrison@gmail.com', phone: '+1 (954) 555-0612', region: 'Southeast', status: 'Active', policy_type: 'Auto', policy_number: 'AU-2024-44729', premium_amount: '$1,500/yr', coverage_amount: '$100,000', claim_count: 0, customer_since: '2024', renewal_date: '2027-01-20', risk_score: 'Low', preferred_channel: 'rcs_sms' }
   ];
 
   // Historical events shown immediately when Events tab opens
@@ -1085,12 +1097,15 @@
     const tbody = document.getElementById('profile-table-body');
     tbody.innerHTML = MOCK_PROFILES.map(p => {
       const statusClass = p.status.toLowerCase().includes('risk') || p.status.toLowerCase().includes('inactive') ? 'badge-warning' : 'badge-success';
+      const typeLabel = p.type === 'customer' ? 'Customer' : 'Agent';
+      const typeClass = p.type === 'customer' ? 'type-customer' : 'type-agent';
       return `<tr data-profile-id="${p.id}">
         <td>${p.name}</td>
+        <td><span class="profile-type-badge ${typeClass}">${typeLabel}</span></td>
         <td>${p.email}</td>
         <td>${p.phone}</td>
         <td><span class="profile-badge ${statusClass}">${p.status}</span></td>
-        <td>${p.engagement_score}</td>
+        <td>${p.engagement_score || '—'}</td>
       </tr>`;
     }).join('');
 
@@ -1138,25 +1153,46 @@
     const container = document.getElementById('profile-tab-content');
 
     if (tabName === 'traits') {
-      const traits = {
-        'agent_id': profile.agent_id,
-        'email': profile.email,
-        'phone': profile.phone,
-        'region': profile.region,
-        'license_state': profile.license_state,
-        'status': profile.status,
-        'engagement_score': profile.engagement_score,
-        'appointment_status': profile.appointment_status,
-        'last_contacted': profile.last_contacted,
-        'policies_sold_ytd': profile.policies_sold_ytd,
-        'sales_target_ytd': profile.sales_target_ytd,
-        'target_attainment': profile.target_attainment,
-        'region_rank': profile.region_rank,
-        'avg_policy_value': profile.avg_policy_value,
-        'book_of_business': profile.book_of_business,
-        'tenure_years': profile.tenure_years,
-        'preferred_channel': profile.preferred_channel
-      };
+      let traits;
+      if (profile.type === 'customer') {
+        traits = {
+          'type': 'Customer',
+          'email': profile.email,
+          'phone': profile.phone,
+          'region': profile.region,
+          'status': profile.status,
+          'policy_type': profile.policy_type,
+          'policy_number': profile.policy_number,
+          'premium_amount': profile.premium_amount,
+          'coverage_amount': profile.coverage_amount,
+          'claim_count': profile.claim_count,
+          'customer_since': profile.customer_since,
+          'renewal_date': profile.renewal_date,
+          'risk_score': profile.risk_score,
+          'preferred_channel': profile.preferred_channel
+        };
+      } else {
+        traits = {
+          'type': 'Agent',
+          'agent_id': profile.agent_id,
+          'email': profile.email,
+          'phone': profile.phone,
+          'region': profile.region,
+          'license_state': profile.license_state,
+          'status': profile.status,
+          'engagement_score': profile.engagement_score,
+          'appointment_status': profile.appointment_status,
+          'last_contacted': profile.last_contacted,
+          'policies_sold_ytd': profile.policies_sold_ytd,
+          'sales_target_ytd': profile.sales_target_ytd,
+          'target_attainment': profile.target_attainment,
+          'region_rank': profile.region_rank,
+          'avg_policy_value': profile.avg_policy_value,
+          'book_of_business': profile.book_of_business,
+          'tenure_years': profile.tenure_years,
+          'preferred_channel': profile.preferred_channel
+        };
+      }
       container.innerHTML = `<table class="traits-table">${Object.entries(traits).map(([k, v]) =>
         `<tr><td>${k}</td><td>${v}</td></tr>`
       ).join('')}</table>`;
@@ -1499,6 +1535,18 @@
     setupEventListeners();
     setOutreachEnabled(false);
     startPolling();
+
+    // Pre-populate default audience with all customer profiles
+    const customerIds = MOCK_PROFILES.filter(p => p.type === 'customer').map(p => p.id);
+    state.audiences.push({
+      name: 'Property & Casualty Promotion',
+      key: 'property_casualty_promotion',
+      description: 'All customers eligible for property and casualty product promotions',
+      conditions: [],
+      destination: 'Send Interaction',
+      members: customerIds,
+      isDefault: true
+    });
     // Start on Sources view (default)
     switchView('sources');
   }

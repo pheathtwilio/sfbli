@@ -44,7 +44,7 @@ test.describe('Profile Explorer', () => {
     await page.waitForSelector('#view-sources', { state: 'visible' });
     await page.evaluate(() => window.__app.switchView('profile-explorer'));
     await expect(page.locator('#view-profile-explorer')).toBeVisible();
-    await expect(page.locator('#profile-table-body tr')).toHaveCount(6);
+    await expect(page.locator('#profile-table-body tr')).toHaveCount(16);
   });
 
   test('clicking a profile shows detail view with tabs', async ({ page }) => {
@@ -52,7 +52,7 @@ test.describe('Profile Explorer', () => {
     await page.waitForSelector('#view-sources', { state: 'visible' });
     await page.evaluate(() => window.__app.switchView('profile-explorer'));
     await expect(page.locator('#view-profile-explorer')).toBeVisible();
-    await page.waitForFunction(() => document.querySelectorAll('#profile-table-body tr').length === 6);
+    await page.waitForFunction(() => document.querySelectorAll('#profile-table-body tr').length === 16);
     await page.evaluate(() => {
       const row = document.querySelector('#profile-table-body tr:first-child');
       row.click();
@@ -66,7 +66,7 @@ test.describe('Profile Explorer', () => {
     await page.goto('/');
     await page.waitForSelector('#view-sources', { state: 'visible' });
     await page.evaluate(() => window.__app.switchView('profile-explorer'));
-    await page.waitForFunction(() => document.querySelectorAll('#profile-table-body tr').length === 6);
+    await page.waitForFunction(() => document.querySelectorAll('#profile-table-body tr').length === 16);
     await page.evaluate(() => document.querySelector('#profile-table-body tr:first-child').click());
     await page.waitForFunction(() => !document.getElementById('profile-detail').classList.contains('hidden'));
     await page.evaluate(() => document.querySelector('.profile-tab[data-tab="events"]').click());
@@ -94,7 +94,7 @@ test.describe('Conversation Input', () => {
 
     // Enable outreach directly
     await page.evaluate(() => window.__app.switchView('profile-explorer'));
-    await page.waitForFunction(() => document.querySelectorAll('#profile-table-body tr').length === 6);
+    await page.waitForFunction(() => document.querySelectorAll('#profile-table-body tr').length === 16);
     await page.evaluate(() => document.querySelector('#profile-table-body tr:first-child').click());
     await page.waitForFunction(() => !document.getElementById('profile-detail').classList.contains('hidden'));
     await page.evaluate(() => document.querySelector('.profile-tab[data-tab="events"]').click());
@@ -109,10 +109,11 @@ test.describe('Conversation Input', () => {
 });
 
 test.describe('Audiences', () => {
-  test('audiences list shows empty state', async ({ page }) => {
+  test('audiences list shows default audience on load', async ({ page }) => {
     await page.goto('/');
+    await page.waitForFunction(() => window.__app && window.__app.state.audiences.length > 0);
     await page.evaluate(() => window.__app.switchView('audiences'));
-    await expect(page.locator('#audiences-table-body')).toContainText('No audiences created yet');
+    await expect(page.locator('#audiences-table-body')).toContainText('Property & Casualty Promotion');
   });
 
   test('new audience button opens wizard', async ({ page }) => {
@@ -213,7 +214,7 @@ test.describe('End-to-End Scenario', () => {
     // Navigate to Paul Heath profile events tab
     await page.evaluate(() => window.__app.switchView('profile-explorer'));
     await page.waitForFunction(() =>
-      document.querySelectorAll('#profile-table-body tr').length === 6);
+      document.querySelectorAll('#profile-table-body tr').length === 16);
     await page.evaluate(() =>
       document.querySelector('#profile-table-body tr:first-child').click());
     await page.waitForFunction(() =>
@@ -246,7 +247,7 @@ test.describe('End-to-End Scenario', () => {
     // Navigate to Emily Watson (usr_004, row index 3)
     await page.evaluate(() => window.__app.switchView('profile-explorer'));
     await page.waitForFunction(() =>
-      document.querySelectorAll('#profile-table-body tr').length === 6);
+      document.querySelectorAll('#profile-table-body tr').length === 16);
     await page.evaluate(() =>
       document.querySelectorAll('#profile-table-body tr')[3].click());
     await page.waitForFunction(() =>
@@ -259,17 +260,19 @@ test.describe('End-to-End Scenario', () => {
     await expect(page.locator('.profile-event-row')).toHaveCount(7, { timeout: 10000 });
   });
 
-  test('page refresh clears audiences and journeys', async ({ page }) => {
+  test('page refresh resets to only default audience', async ({ page }) => {
     await page.goto('/');
     await page.evaluate(() => {
       window.__app.state.audiences.push({
-        name: 'Test', key: 'test', description: '',
+        name: 'Custom Test', key: 'custom_test', description: '',
         conditions: [], destination: 'Send Interaction', members: []
       });
     });
     await page.reload();
-    await page.waitForSelector('#view-sources', { state: 'visible' });
+    await page.waitForFunction(() => window.__app && window.__app.state.audiences.length > 0);
     await page.evaluate(() => window.__app.switchView('audiences'));
-    await expect(page.locator('#audiences-table-body')).toContainText('No audiences created yet');
+    // Default audience persists but custom one is gone
+    await expect(page.locator('#audiences-table-body')).toContainText('Property & Casualty Promotion');
+    await expect(page.locator('#audiences-table-body')).not.toContainText('Custom Test');
   });
 });
