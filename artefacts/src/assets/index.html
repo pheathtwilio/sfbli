@@ -227,6 +227,84 @@
         </div>
       </section>
 
+      <!-- Audiences View -->
+      <section class="view-panel hidden" id="view-audiences">
+        <div id="audiences-list-container">
+          <div class="wizard-breadcrumb">Spaces / default / <strong>Audiences</strong></div>
+          <div class="view-tabs">
+            <span class="view-tab active">Audiences</span>
+            <span class="view-tab">Profiles Explorer</span>
+          </div>
+          <div class="view-header">
+            <h1>Audiences</h1>
+          </div>
+          <div class="audiences-promo">
+            <div class="audiences-promo-text">
+              <div class="audiences-promo-title">Introducing Product Recommendations, powered by AI</div>
+              <p>Harness the power of AI to build an audience that is the most likely to purchase a certain product.</p>
+              <button class="btn btn-sm btn-outline" disabled>Build a Product Based Audience</button>
+            </div>
+          </div>
+          <div class="audiences-toolbar">
+            <button class="btn btn-sm btn-outline" disabled>Predictive Audiences</button>
+            <div class="audiences-toolbar-right">
+              <input type="text" class="search-input" placeholder="Search audiences by name..." disabled>
+              <button class="btn btn-primary btn-sm" id="btn-new-audience">+ New audience</button>
+            </div>
+          </div>
+          <table class="data-table" id="audiences-table">
+            <thead>
+              <tr><th>Name</th><th>Status</th><th>Audience Size</th><th>Destinations</th></tr>
+            </thead>
+            <tbody id="audiences-table-body">
+              <tr class="empty-row"><td colspan="4">You don't have any audiences or folders yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="audience-wizard" class="hidden"></div>
+        <div id="audience-detail" class="hidden"></div>
+      </section>
+
+      <!-- Journeys View -->
+      <section class="view-panel hidden" id="view-journeys">
+        <div id="journeys-list-container">
+          <div class="wizard-breadcrumb">Spaces / default / <strong>Journeys</strong></div>
+          <div class="view-header">
+            <h1>Journeys</h1>
+            <div class="view-header-links">
+              <span class="header-link">Journeys docs</span>
+              <span class="header-link">Example use-cases</span>
+            </div>
+          </div>
+          <div class="journeys-tabs">
+            <span class="view-tab active">All</span>
+            <span class="view-tab">Published</span>
+            <span class="view-tab">Drafts</span>
+            <span class="view-tab">Archived</span>
+          </div>
+          <div class="audiences-toolbar">
+            <div class="audiences-toolbar-right" style="margin-left:auto;">
+              <input type="text" class="search-input" placeholder="Filter journeys by name..." disabled>
+              <button class="btn btn-primary btn-sm" id="btn-new-journey">+ Create journey</button>
+            </div>
+          </div>
+          <table class="data-table" id="journeys-table">
+            <thead>
+              <tr><th>Name</th><th>Status</th><th>Destinations</th><th>Created By</th><th>Last Modified</th></tr>
+            </thead>
+            <tbody id="journeys-table-body">
+              <tr class="empty-row"><td colspan="5">
+                <div class="empty-state-icon">&#128736;</div>
+                <div class="empty-state-title">Create journeys</div>
+                <p class="empty-state-text">Unify your customer experience across your marketing stack to build multi-step, outcomes-based journeys.</p>
+                <button class="btn btn-primary btn-sm btn-new-journey-inline">+ Create journey</button>
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="journey-wizard" class="hidden"></div>
+      </section>
+
       <!-- Events / Scenario View -->
       <section class="view-panel hidden" id="view-events">
         <div class="section-header">
