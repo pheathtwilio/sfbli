@@ -5,7 +5,8 @@ module.exports = defineConfig({
   timeout: 30000,
   use: {
     baseURL: 'http://localhost:3000',
-    screenshot: 'only-on-failure'
+    screenshot: 'only-on-failure',
+    viewport: { width: 1440, height: 900 }
   },
   webServer: {
     command: 'npx http-server assets -p 3000 -c-1',
