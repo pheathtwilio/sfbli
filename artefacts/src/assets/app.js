@@ -1184,6 +1184,26 @@
         }, e.delay);
       });
 
+      // Check if profile qualifies for a journey — add promotion_sent event
+      const qualifyingJourney = state.journeys.find(j => {
+        const audience = state.audiences.find(a => a.key === j.audience_key);
+        return audience && audience.members.includes(profile.id);
+      });
+
+      if (qualifyingJourney) {
+        setTimeout(() => {
+          if (!list.isConnected) return;
+          const row = document.createElement('div');
+          row.className = 'profile-event-row entering';
+          row.innerHTML = '<span class="profile-event-dot dot-success"></span>' +
+            '<span class="profile-event-name">promotion_sent</span>' +
+            '<span class="profile-event-time">Just now</span>';
+          list.prepend(row);
+          setTimeout(() => row.classList.remove('entering'), 350);
+          triggerPromotionalOutreach(profile);
+        }, 8000);
+      }
+
     } else if (tabName === 'audiences') {
       const matching = state.audiences.filter(a => a.members.includes(profile.id));
       if (matching.length === 0) {
@@ -1214,6 +1234,30 @@
         <tr><td>email</td><td>${profile.email}</td></tr>
         <tr><td>phone</td><td>${profile.phone}</td></tr>
       </table>`;
+    }
+  }
+
+  // ==================== PROMOTIONAL OUTREACH ====================
+  function triggerPromotionalOutreach(profile) {
+    const channel = profile.preferred_channel;
+    if (channel === 'rcs_sms' || channel === 'sms') {
+      fetch(`${CONFIG.functionsBaseUrl}/send-rcs`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: profile.phone })
+        // Template details to be added when user provides them
+      }).then(r => r.json()).then(() => {
+        addConversationMessage('outbound', 'rcs', 'Promotional RCS/SMS sent to ' + profile.name);
+      }).catch(err => console.error('Promo send failed:', err));
+    } else if (channel === 'email') {
+      fetch(`${CONFIG.functionsBaseUrl}/send-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: profile.email })
+        // Template details to be added when user provides them
+      }).then(r => r.json()).then(() => {
+        addConversationMessage('outbound', 'email', 'Promotional email sent to ' + profile.name);
+      }).catch(err => console.error('Promo email failed:', err));
     }
   }
 
@@ -1461,7 +1505,7 @@
   }
 
   // ==================== EXPOSE FOR TASK 9 ====================
-  window.__app = { CONFIG, state, dom, updateProfileField, switchView, openAudienceWizard, closeAudienceWizard, computeAudienceMembers, createAudience, renderAudienceDetail, renderAudiencesList, showAudienceDetail, openJourneyWizard, closeJourneyWizard, createJourney };
+  window.__app = { CONFIG, state, dom, updateProfileField, switchView, openAudienceWizard, closeAudienceWizard, computeAudienceMembers, createAudience, renderAudienceDetail, renderAudiencesList, showAudienceDetail, openJourneyWizard, closeJourneyWizard, createJourney, triggerPromotionalOutreach };
 
   // Start the app
   init();
