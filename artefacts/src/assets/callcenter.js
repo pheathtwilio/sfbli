@@ -139,7 +139,7 @@
     `;
 
     // Add identity event
-    addEvent('identity', 'Identity Resolved', `${customer.name} (${customer.id})`, 'green');
+    addEvent('identity', 'identity_resolved', `${customer.name} (${customer.id})`, 'green');
 
     return customer;
   }
@@ -256,7 +256,7 @@
   // Disposition recording
   function recordDisposition(disposition) {
     state.disposition = disposition;
-    addEvent('event', 'Call Disposition', disposition, 'purple');
+    addEvent('event', 'disposition_recorded', disposition, 'purple');
     console.log('[Disposition]', disposition);
   }
 
@@ -349,7 +349,7 @@
       claims: '/claims',
       contact: '/contact'
     };
-    addEvent('event', 'Page View', pagePaths[page] || `/${page}`, 'blue');
+    addEvent('event', 'page_view', pagePaths[page] || `/${page}`, 'blue');
 
     if (page === 'policies') {
       content.innerHTML = `
@@ -389,7 +389,7 @@
         <div class="cc-overlay highlight hidden" id="phone-overlay">
           <h3>Enter Your Phone Number</h3>
           <p>We'll send you a verification code to confirm your identity.</p>
-          <input type="tel" class="cc-phone-input" id="phone-input" placeholder="+1 (312) 568-9550" maxlength="20" />
+          <input type="tel" class="cc-phone-input" id="phone-input" placeholder="Enter phone number" maxlength="20" />
           <button class="cc-btn cc-btn-primary" id="submit-phone-btn">Continue</button>
         </div>
 
@@ -459,7 +459,7 @@
         <div class="cc-overlay highlight hidden" id="phone-overlay">
           <h3>Enter Your Phone Number</h3>
           <p>We'll send you a verification code to confirm your identity.</p>
-          <input type="tel" class="cc-phone-input" id="phone-input" placeholder="+1 (312) 568-9550" maxlength="20" />
+          <input type="tel" class="cc-phone-input" id="phone-input" placeholder="Enter phone number" maxlength="20" />
           <button class="cc-btn cc-btn-primary" id="submit-phone-btn">Continue</button>
         </div>
 
@@ -565,7 +565,7 @@
   // Flow handlers
   function onClickToCall() {
     state.phase = 'phone_input';
-    addEvent('event', 'Button Click', 'Call Us Now', 'purple');
+    addEvent('event', 'button_click', 'Call Us Now', 'purple');
 
     hide($('#call-overlay'));
     show($('#phone-overlay'));
@@ -585,7 +585,7 @@
     }
 
     state.phase = 'otp_verify';
-    addEvent('event', 'Phone Submitted', phone, 'amber');
+    addEvent('event', 'phone_submitted', phone, 'amber');
 
     // Resolve identity based on current page
     const customer = resolveIdentity(phone);
@@ -596,10 +596,10 @@
 
     // Call lookup and verify-start APIs
     await callLookup(phone);
-    addEvent('event', 'Lookup Complete', 'Phone validated', 'blue');
+    addEvent('event', 'lookup_complete', 'Phone validated', 'blue');
 
     await callVerifyStart(phone);
-    addEvent('event', 'Verification Started', 'OTP sent to phone', 'amber');
+    addEvent('event', 'verify_sent', 'OTP sent to phone', 'amber');
 
     // Show OTP overlay
     hide($('#phone-overlay'));
@@ -642,7 +642,7 @@
     }
 
     state.phase = 'connected';
-    addEvent('event', 'Verification Success', 'OTP verified', 'green');
+    addEvent('event', 'verify_approved', 'OTP verified', 'green');
 
     // Hide OTP, show connected overlay
     hide($('#otp-overlay'));
@@ -670,12 +670,12 @@
     }
 
     await postContextToCRelay(context);
-    addEvent('event', 'Context Posted', 'Customer data sent to AI agent', 'purple');
+    addEvent('event', 'context_posted', 'Customer data sent to AI agent', 'purple');
 
     // Initiate call
     const callResult = await callInitiate(phone);
     if (callResult.success) {
-      addEvent('event', 'Call Initiated', `Call SID: ${state.callSid}`, 'green');
+      addEvent('event', 'call_connected', `Call SID: ${state.callSid}`, 'green');
 
       // Update call bar
       const callBar = $('#call-bar');
@@ -704,7 +704,7 @@
     callBar.classList.add('idle');
     callStatus.textContent = 'Call ended';
 
-    addEvent('event', 'Call Ended', `Duration: ${state.callSeconds}s`, 'red');
+    addEvent('event', 'call_ended', `Duration: ${state.callSeconds}s`, 'red');
 
     // Record disposition based on page
     let disposition;
@@ -741,7 +741,7 @@
     });
 
     // Initial page view
-    addEvent('event', 'Page View', '/home', 'blue');
+    addEvent('event', 'page_view', '/home', 'blue');
 
     // Auto-navigate to policies page after delay
     setTimeout(() => {
