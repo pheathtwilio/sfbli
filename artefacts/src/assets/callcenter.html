@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SFBLI — Call Center Demo</title>
+  <link rel="stylesheet" href="callcenter.css">
+</head>
+<body>
+  <div class="cc-layout">
+    <!-- Left panel: SFBLI site mockup -->
+    <div class="cc-site">
+      <nav class="cc-site-nav">
+        <div class="cc-site-logo">S</div>
+        <div class="cc-site-brand">SFBLI</div>
+        <ul class="cc-site-nav-links">
+          <li><a class="cc-site-nav-link" data-page="home">Home</a></li>
+          <li><a class="cc-site-nav-link" data-page="policies">Policies</a></li>
+          <li><a class="cc-site-nav-link active" data-page="claims">Claims</a></li>
+          <li><a class="cc-site-nav-link" data-page="contact">Contact Us</a></li>
+        </ul>
+      </nav>
+      <div class="cc-site-content" id="site-content">
+        <!-- Content will be rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- Right panel: Events stream -->
+    <div class="cc-events-panel">
+      <div class="cc-profile-header">
+        <div class="cc-profile-avatar" id="profile-avatar">?</div>
+        <div class="cc-profile-info">
+          <div class="cc-profile-name" id="profile-name">Anonymous Visitor</div>
+          <div class="cc-profile-id" id="profile-id">visitor_unknown</div>
+          <div class="cc-profile-badges" id="profile-badges">
+            <span class="cc-profile-badge">Anonymous</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="cc-events-stream">
+        <div class="cc-events-section">
+          <div class="cc-section-label">Customer Journey</div>
+          <div class="cc-event-list" id="event-list">
+            <!-- Events will be added here -->
+          </div>
+        </div>
+
+        <div class="cc-events-section hidden" id="transcript-section">
+          <div class="cc-section-label" id="transcript-label">Call Transcript</div>
+          <div class="cc-transcript-list" id="transcript-list">
+            <!-- Transcript entries will be added here -->
+          </div>
+        </div>
+      </div>
+
+      <div class="cc-call-bar idle" id="call-bar">
+        <div class="cc-call-indicator"></div>
+        <div class="cc-call-status" id="call-status">No active call</div>
+        <div class="cc-call-timer hidden" id="call-timer">00:00</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="callcenter.js"></script>
+</body>
+</html>
