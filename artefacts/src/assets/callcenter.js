@@ -56,6 +56,7 @@
     transcriptPollInterval: null,
     otpAttempts: 0,
     disposition: null,
+    handoffDetected: false,
     lastTranscriptIndex: 0
   };
 
@@ -90,7 +91,8 @@
     `;
 
     eventList.appendChild(eventRow);
-    eventList.scrollTop = eventList.scrollHeight;
+    const stream = eventList.closest('.cc-events-stream');
+    if (stream) stream.scrollTop = stream.scrollHeight;
   }
 
   // Transcript - add ai/customer entry to #transcript-list
@@ -108,7 +110,8 @@
     `;
 
     transcriptList.appendChild(transcriptEntry);
-    transcriptList.scrollTop = transcriptList.scrollHeight;
+    const stream = transcriptList.closest('.cc-events-stream');
+    if (stream) stream.scrollTop = stream.scrollHeight;
 
     // Show transcript section if hidden
     const transcriptSection = $('#transcript-section');
@@ -269,6 +272,19 @@
             addTranscript(entry.role, entry.content);
           });
           state.lastTranscriptIndex += result.entries.length;
+        }
+
+        // Detect handoff to Flex agent
+        if (result.handoff && !state.handoffDetected) {
+          state.handoffDetected = true;
+          addEvent('event', 'agent_escalation', 'Transferring to claims specialist', 'amber');
+          const callStatus = $('#call-status');
+          if (callStatus) callStatus.textContent = 'Transferring to agent...';
+        }
+
+        // Auto-detect call end from CRelay status webhook
+        if (result.callStatus === 'completed' || result.callStatus === 'failed' || result.callStatus === 'canceled') {
+          onEndCall();
         }
       } catch (error) {
         // Silent — transcript polling errors are non-critical
@@ -640,7 +656,11 @@
       renewal: customer.renewal,
       risk_score: customer.risk_score,
       claim_count: customer.claim_count,
-      customer_since: customer.customer_since
+      customer_since: customer.customer_since,
+      browsingHistory: state.events
+        .filter(e => e.name === 'page_view')
+        .map(e => e.detail),
+      verificationStatus: 'approved'
     };
 
     if (state.currentPage === 'claims' && customer.claims) {
@@ -652,7 +672,7 @@
 
     // Initiate call
     const callResult = await callInitiate(phone);
-    if (callResult.success) {
+    if (callResult.callSid) {
       addEvent('event', 'call_connected', `Call SID: ${state.callSid}`, 'green');
 
       // Update call bar
@@ -684,12 +704,14 @@
 
     addEvent('event', 'call_ended', `Duration: ${state.callSeconds}s`, 'red');
 
-    // Record disposition based on page
+    // Record disposition based on page and handoff status
     let disposition;
-    if (state.currentPage === 'policies') {
+    if (state.handoffDetected) {
+      disposition = 'Claim Inquiry — Escalated to Agent';
+    } else if (state.currentPage === 'policies') {
       disposition = 'Policy Inquiry — Resolved';
     } else if (state.currentPage === 'claims') {
-      disposition = 'Claim Inquiry — Escalated to Agent';
+      disposition = 'Claim Inquiry — Resolved by AI';
     } else {
       disposition = 'General Inquiry — Resolved';
     }
