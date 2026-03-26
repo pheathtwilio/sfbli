@@ -45,7 +45,7 @@ Everything resets on page refresh for repeatable demos.
 2. Customer clicks "Call Us Now" → enters phone number
 3. Phone number triggers **identity resolution** — anonymous profile merges with known customer
 4. **Lookup v2** runs: line type intelligence (non-VoIP check), caller name
-5. **Verify** sends OTP via RCS/SMS
+5. **Verify** sends OTP via SMS
 6. Customer enters OTP on the page → verified
 7. Call creation begins, recording notice via `<Say>`, then routes to Conversation Relay
 
@@ -79,7 +79,7 @@ Fork from `forge-in-a-box-cr` repo, branch `sfbli-call-center` (based on `cr-4-i
 | `/context` | POST | Inject session context (customer profile, browsing history, verification status) before call connects |
 | `/twiml` | POST | Returns ConversationRelay TwiML (existing, modified) |
 | `/ws` | WS | WebSocket conversation handler (existing, modified) |
-| `/transcript` | POST | Returns current transcript for polling |
+| `/transcript` | GET | Returns current transcript for polling |
 | `/status` | POST | Call lifecycle events (ringing, in-progress, completed) |
 
 ### Context Injection Flow
@@ -111,9 +111,10 @@ When customer requests an agent:
 - Used to flag potential fraud (non-fixed VoIP numbers)
 
 ### `verify-start.js`
-- Input: `phone` (E.164), `channel` (sms/whatsapp, default sms)
+- Input: `phone` (E.164), `channel` (sms, default sms)
 - Creates Verify verification using `VERIFY_SERVICE_SID`
 - Returns: `{ sid, status, channel }`
+- Note: Verify sends OTP via SMS (not RCS — Verify does not support RCS natively)
 
 ### `verify-check.js`
 - Input: `phone` (E.164), `code` (6-digit string)
@@ -121,11 +122,12 @@ When customer requests an agent:
 - Returns: `{ valid, status }`
 
 ### `initiate-call.js`
-- Input: `from` (customer phone), `customerContext` (JSON object)
+- Input: `customerPhone` (E.164), `customerContext` (JSON object)
 - POSTs context to CRelay `/context` endpoint
 - Creates outbound call via Calls API:
-  - `to`: CRelay TwiML endpoint
-  - `from`: SFBLI Twilio number
+  - `from`: SFBLI Twilio number (env var `TWILIO_PHONE_NUMBER`)
+  - `to`: customer phone or conference/SIP target
+  - `url`: CRelay `/twiml` endpoint (returns ConversationRelay TwiML)
   - `record`: true
   - `statusCallback`: CRelay `/status` endpoint
 - Returns: `{ callSid, status }`
@@ -173,9 +175,11 @@ Browser (callcenter.html)
 
 ### Profile Resolution
 - `callcenter.html` uses MOCK_PROFILES from `app.js` (or duplicated subset)
-- Phone number entry triggers profile lookup by phone match
+- Phone number entry triggers profile lookup by phone match, filtered to `type === 'customer'` only (excludes agent profiles)
 - Maria Santos and Amanda Foster both use `+13125689550` / `pheath@twilio.com`
-- Scenario selection (Path A vs Path B) determined by which profile/page the presenter navigates to
+- **Disambiguation rule:** The current page determines which profile is selected. If the left panel shows the Policies page, select `cust_001` (Maria Santos). If it shows the Claims page, select `cust_007` (Amanda Foster). The page context sets a `currentScenario` variable that drives profile selection.
+
+**Note:** The new `initiate-call.js` is separate from the existing `trigger-call.js` (used for outbound promo calls). They serve different flows.
 
 ### Reset Behavior
 - Page refresh clears all state (events, transcript, call status)
@@ -199,3 +203,11 @@ Browser (callcenter.html)
 5. Real Twilio API calls for: Lookup, Verify, voice call, Conversation Relay
 6. Mocked: Segment event tracking, Flex claims/policy data display
 7. `callcenter.html` is a separate standalone page (not embedded in `index.html`)
+
+## Error Handling (Demo Recovery)
+
+- **Lookup flags non-fixed VoIP:** Show warning badge in event stream but proceed with the flow
+- **Verify send fails:** Show error in event stream, allow retry
+- **Wrong OTP entered:** Show "Invalid code" message, allow retry (up to 3 attempts)
+- **CRelay `/context` POST fails:** Proceed with call — AI will ask all verification questions from scratch (no context injection)
+- **Call creation fails:** Show error status in call bar, allow retry via "Call Us Now" button
