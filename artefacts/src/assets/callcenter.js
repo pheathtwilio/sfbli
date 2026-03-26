@@ -145,13 +145,8 @@
     return customer;
   }
 
-  // API calls
+  // API calls — FUNCTIONS_BASE is empty string when same-origin (Twilio Functions)
   async function callLookup(phone) {
-    if (!FUNCTIONS_BASE) {
-      console.log('[Demo Mode] Lookup:', phone);
-      return { success: true };
-    }
-
     try {
       const response = await fetch(`${FUNCTIONS_BASE}/lookup`, {
         method: 'POST',
@@ -161,16 +156,11 @@
       return await response.json();
     } catch (error) {
       console.error('Lookup error:', error);
-      return { success: false, error: error.message };
+      return { error: error.message };
     }
   }
 
   async function callVerifyStart(phone) {
-    if (!FUNCTIONS_BASE) {
-      console.log('[Demo Mode] Verify start:', phone);
-      return { success: true };
-    }
-
     try {
       const response = await fetch(`${FUNCTIONS_BASE}/verify-start`, {
         method: 'POST',
@@ -180,17 +170,11 @@
       return await response.json();
     } catch (error) {
       console.error('Verify start error:', error);
-      return { success: false, error: error.message };
+      return { error: error.message };
     }
   }
 
   async function callVerifyCheck(phone, code) {
-    if (!FUNCTIONS_BASE) {
-      console.log('[Demo Mode] Verify check:', phone, code);
-      // Accept any 6-digit code in demo mode
-      return { success: true, valid: code.length === 6 };
-    }
-
     try {
       const response = await fetch(`${FUNCTIONS_BASE}/verify-check`, {
         method: 'POST',
@@ -200,15 +184,15 @@
       return await response.json();
     } catch (error) {
       console.error('Verify check error:', error);
-      return { success: false, error: error.message };
+      return { valid: false, error: error.message };
     }
   }
 
-  // CRelay context POST (browser-side)
+  // CRelay context POST (browser-side, best-effort)
   async function postContextToCRelay(context) {
     if (!CRELAY_BASE) {
-      console.log('[Demo Mode] Post context to CRelay:', context);
-      return { success: true };
+      console.warn('CRELAY_BASE not set, skipping context POST');
+      return {};
     }
 
     try {
@@ -220,27 +204,20 @@
       return await response.json();
     } catch (error) {
       console.error('CRelay context post error:', error);
-      return { success: false, error: error.message };
+      return { error: error.message };
     }
   }
 
   // Call initiation
   async function callInitiate(phone) {
-    if (!FUNCTIONS_BASE) {
-      console.log('[Demo Mode] Call initiate:', phone);
-      // Simulate call in demo mode
-      state.callSid = 'CA' + Math.random().toString(36).substring(2, 15);
-      return { success: true, callSid: state.callSid };
-    }
-
     try {
-      const response = await fetch(`${FUNCTIONS_BASE}/call-initiate`, {
+      const response = await fetch(`${FUNCTIONS_BASE}/initiate-call`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone })
+        body: JSON.stringify({ customerPhone: phone })
       });
       const result = await response.json();
-      if (result.success && result.callSid) {
+      if (result.callSid) {
         state.callSid = result.callSid;
       }
       return result;
