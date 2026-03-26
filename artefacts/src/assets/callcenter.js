@@ -1,9 +1,10 @@
 (function() {
   'use strict';
 
-  // Config - set at deploy time
+  // Config - FUNCTIONS_BASE is empty when deployed to Twilio Functions (same origin)
+  // CRELAY_BASE is fetched from the config Function (reads CRELAY_BASE_URL from .env)
   const FUNCTIONS_BASE = '';
-  const CRELAY_BASE = '';
+  let CRELAY_BASE = '';
 
   // Customer profiles keyed by page
   const CUSTOMERS = {
@@ -722,8 +723,22 @@
     show($('#call-overlay'));
   }
 
+  // Fetch config from Twilio Function (single source of truth for CRELAY_BASE_URL)
+  async function loadConfig() {
+    try {
+      const res = await fetch(`${FUNCTIONS_BASE}/config`);
+      const data = await res.json();
+      CRELAY_BASE = data.crelayBaseUrl || '';
+      console.log('Config loaded, CRELAY_BASE:', CRELAY_BASE);
+    } catch (e) {
+      console.warn('Config fetch failed, CRELAY_BASE not set:', e.message);
+    }
+  }
+
   // Init
-  function init() {
+  async function init() {
+    await loadConfig();
+
     // Nav click handlers
     $$('.cc-site-nav-link').forEach(link => {
       link.addEventListener('click', (e) => {
