@@ -264,14 +264,14 @@
         const response = await fetch(`${CRELAY_BASE}/transcript?callSid=${state.callSid}&since=${state.lastTranscriptIndex}`);
         const result = await response.json();
 
-        if (result.success && result.entries && result.entries.length > 0) {
+        if (result.entries && result.entries.length > 0) {
           result.entries.forEach(entry => {
-            addTranscript(entry.role, entry.text);
-            state.lastTranscriptIndex = entry.index + 1;
+            addTranscript(entry.role, entry.content);
           });
+          state.lastTranscriptIndex += result.entries.length;
         }
       } catch (error) {
-        console.error('Transcript poll error:', error);
+        // Silent — transcript polling errors are non-critical
       }
     }, 2000);
   }
