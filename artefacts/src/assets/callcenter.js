@@ -14,7 +14,7 @@
       phone: '+13125689550',
       email: 'pheath@twilio.com',
       policy_type: 'Homeowners',
-      policy_number: 'HO-2024-08341',
+      policy_number: 'POLICY01',
       premium: '$2,400/yr',
       coverage: '$350,000',
       renewal: '2026-08-15',
@@ -28,7 +28,7 @@
       phone: '+13125689550',
       email: 'pheath@twilio.com',
       policy_type: 'Auto',
-      policy_number: 'AU-2022-27563',
+      policy_number: 'POLICY02',
       premium: '$2,100/yr',
       coverage: '$150,000',
       renewal: '2026-06-15',
@@ -251,7 +251,7 @@
           setTimeout(() => addTranscript('ai', 'Hello! Thank you for calling SFBLI. How can I assist you today?'), 2000);
           if (state.currentPage === 'policies') {
             setTimeout(() => addTranscript('customer', 'Hi, I have a question about my homeowners policy.'), 4000);
-            setTimeout(() => addTranscript('ai', 'I can help you with that. I see you have policy HO-2024-08341 with $350,000 coverage. What would you like to know?'), 6000);
+            setTimeout(() => addTranscript('ai', 'I can help you with that. I see you have policy POLICY01 with $350,000 coverage. What would you like to know?'), 6000);
           } else if (state.currentPage === 'claims') {
             setTimeout(() => addTranscript('customer', 'I\'m calling about my recent claim, CL-2025-0891.'), 4000);
             setTimeout(() => addTranscript('ai', 'I see your claim for $4,200 is currently under review. Let me connect you with a claims specialist who can provide more details.'), 6000);
@@ -335,7 +335,7 @@
 
         <div class="cc-policy-card">
           <div class="cc-policy-header">
-            <div class="cc-policy-number">HO-2024-08341</div>
+            <div class="cc-policy-number">POLICY01</div>
             <div class="cc-policy-type-badge">Homeowners</div>
           </div>
           <div class="cc-policy-details">
