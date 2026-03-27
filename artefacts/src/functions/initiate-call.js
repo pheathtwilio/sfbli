@@ -25,11 +25,16 @@ exports.handler = async function (context, event, callback) {
     // TwiML: recording notice then redirect to CRelay
     const twiml = `<Response><Say voice="Polly.Joanna">This call may be recorded for quality and training purposes.</Say><Redirect>${crelayBase}/twiml</Redirect></Response>`;
 
+    // Build the Functions domain for recording callback
+    const functionsDomain = `https://${context.DOMAIN_NAME}`;
+
     const call = await client.calls.create({
       from: context.TWILIO_PHONE_NUMBER,
       to: customerPhone,
       twiml,
       record: true,
+      recordingStatusCallback: `${functionsDomain}/recording-handler`,
+      recordingStatusCallbackEvent: ['completed'],
       statusCallback: `${crelayBase}/status`,
       statusCallbackEvent: ['initiated', 'ringing', 'answered', 'completed']
     });
