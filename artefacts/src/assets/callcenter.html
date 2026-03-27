@@ -8,19 +8,44 @@
 </head>
 <body>
   <div class="cc-layout">
-    <!-- Left panel: SFBLI site mockup -->
+    <!-- Left panel: SFBLI site with screenshot backgrounds -->
     <div class="cc-site">
-      <nav class="cc-site-nav">
-        <div class="cc-site-logo">S</div>
-        <div class="cc-site-brand">SFBLI</div>
-        <ul class="cc-site-nav-links">
-          <li><a class="cc-site-nav-link" data-page="home">Home</a></li>
-          <li><a class="cc-site-nav-link" data-page="policies">Policies</a></li>
-          <li><a class="cc-site-nav-link active" data-page="claims">Claims</a></li>
-          <li><a class="cc-site-nav-link" data-page="contact">Contact Us</a></li>
-        </ul>
-      </nav>
       <div class="cc-site-content" id="site-content">
+        <!-- Nav overlay bar — sits on top of the screenshot's real nav -->
+        <div class="cc-nav-overlay">
+          <a class="cc-nav-logo" data-page="home">
+            <span class="cc-nav-logo-tagline">Your Friends<br>for <em>Life.</em></span>
+            <span class="cc-nav-logo-name"><strong>SOUTHERN FARM BUREAU</strong><br>LIFE INSURANCE COMPANY</span>
+          </a>
+          <div class="cc-nav-links">
+            <a class="cc-nav-link" data-page="home">About Us</a>
+            <a class="cc-nav-link" data-page="home">Blog</a>
+            <a class="cc-nav-link cc-nav-link-active" data-page="policies">Products</a>
+            <a class="cc-nav-link" data-page="home">Services</a>
+            <a class="cc-nav-link" data-page="home">My Policies</a>
+            <a class="cc-nav-link" data-page="home">Pay Online</a>
+            <a class="cc-nav-link" data-page="home">Login</a>
+          </div>
+        </div>
+        <!-- Sidebar overlay — sits on top of the screenshot's real sidebar -->
+        <div class="cc-sidebar-overlay">
+          <a class="cc-sidebar-item" data-page="home">
+            <span class="cc-sidebar-icon">&#x2795;&#x2796;<br>&#x00F7;&#x2716;</span>
+            <span class="cc-sidebar-label">Calculator</span>
+          </a>
+          <a class="cc-sidebar-item" data-page="home">
+            <span class="cc-sidebar-icon">&#x1F50D;</span>
+            <span class="cc-sidebar-label">Find Agent</span>
+          </a>
+          <a class="cc-sidebar-item" data-page="claims">
+            <span class="cc-sidebar-icon">&#x1F4CB;</span>
+            <span class="cc-sidebar-label">Report Claim</span>
+          </a>
+          <a class="cc-sidebar-item" data-page="home">
+            <span class="cc-sidebar-icon">&#x1F4BC;</span>
+            <span class="cc-sidebar-label">Careers</span>
+          </a>
+        </div>
         <!-- Content will be rendered dynamically -->
       </div>
     </div>

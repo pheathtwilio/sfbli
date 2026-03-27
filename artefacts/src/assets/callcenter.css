@@ -14,7 +14,7 @@ body {
 /* Main layout */
 .cc-layout {
   display: grid;
-  grid-template-columns: 1fr 380px;
+  grid-template-columns: 1fr clamp(320px, 28vw, 400px);
   height: 100vh;
 }
 
@@ -24,68 +24,166 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
 }
 
-.cc-site-nav {
-  background: #004785;
-  color: white;
+/* Top nav overlay — covers the screenshot's real nav with clickable styled links */
+.cc-nav-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 4;
   display: flex;
   align-items: center;
-  padding: 0 24px;
-  height: 60px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  justify-content: space-between;
+  padding: 8px 20px;
+  background: #fff;
+  border-bottom: 1px solid #e0e0e0;
+  min-height: 44px;
 }
 
-.cc-site-logo {
-  font-size: 28px;
-  font-weight: 700;
-  margin-right: 8px;
-}
-
-.cc-site-brand {
-  font-size: 20px;
-  font-weight: 600;
-  margin-right: auto;
-}
-
-.cc-site-nav-links {
+.cc-nav-logo {
   display: flex;
-  gap: 24px;
-  list-style: none;
-}
-
-.cc-site-nav-link {
-  color: white;
-  text-decoration: none;
-  font-size: 15px;
-  padding: 8px 0;
-  border-bottom: 2px solid transparent;
-  transition: border-color 0.2s;
+  align-items: center;
+  gap: 8px;
   cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  flex-shrink: 0;
 }
 
-.cc-site-nav-link:hover {
-  border-bottom-color: rgba(255,255,255,0.5);
+.cc-nav-logo-tagline {
+  font-size: 11px;
+  line-height: 1.2;
+  color: #8b1a1a;
+  font-style: italic;
 }
 
-.cc-site-nav-link.active {
-  border-bottom-color: white;
+.cc-nav-logo-tagline em {
+  font-weight: 700;
+  color: #c62828;
+}
+
+.cc-nav-logo-name {
+  font-size: 11px;
+  line-height: 1.2;
+  color: #1a1a1a;
+  letter-spacing: 0.3px;
+}
+
+.cc-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: nowrap;
+}
+
+.cc-nav-link {
+  color: #8b1a1a;
+  text-decoration: none;
+  font-size: 13px;
+  padding: 4px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  border-left: 1px solid #ccc;
+}
+
+.cc-nav-link:first-child {
+  border-left: none;
+}
+
+.cc-nav-link:hover,
+.cc-nav-link-active {
+  color: #c62828;
+  font-weight: 600;
+}
+
+/* Left sidebar overlay — positioned next to the cropped screenshot */
+.cc-sidebar-overlay {
+  position: absolute;
+  top: 44px;
+  left: 0;
+  bottom: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: #f5f7fa;
+  border-right: 1px solid #e0e0e0;
+  padding: 12px 0;
+  width: 72px;
+}
+
+.cc-sidebar-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 6px;
+  cursor: pointer;
+  text-decoration: none;
+  color: #444;
+  font-size: 10px;
+  text-align: center;
+  transition: background 0.15s;
+}
+
+.cc-sidebar-item:hover {
+  background: #f0f0f0;
+  color: #8b1a1a;
+}
+
+.cc-sidebar-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.cc-sidebar-label {
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.2;
 }
 
 .cc-site-content {
   flex: 1;
-  overflow-y: auto;
-  padding: 32px;
+  overflow: hidden;
+  padding: 0;
+  position: relative;
+}
+
+/* Screenshot image — offset to sit below nav overlay and right of sidebar */
+.cc-site-content .cc-bg-img {
+  position: absolute;
+  top: 44px;
+  left: 72px;
+  width: calc(100% - 72px);
+  height: calc(100% - 44px);
+  object-fit: cover;
+  object-position: top left;
+  display: block;
+}
+
+/* Screenshot overlay wrapper — positions call-flow cards over the screenshot background */
+.cc-screenshot-overlay-wrap {
+  position: absolute;
+  bottom: 0;
+  left: 72px;
+  right: 0;
+  padding: 24px 32px;
+  background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.35) 60%, transparent 100%);
+  z-index: 5;
 }
 
 /* Site content overlays */
 .cc-overlay {
-  background: white;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(12px);
   border-radius: 12px;
   padding: 32px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  border: 2px solid transparent;
-  margin-bottom: 24px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  margin-bottom: 16px;
   position: relative;
 }
 

@@ -6,41 +6,29 @@
   const FUNCTIONS_BASE = '';
   let CRELAY_BASE = '';
 
-  // Customer profiles keyed by page
+  // Customer profile — same person for both scenarios, page determines context
+  const MARCO = {
+    id: 'cust_001',
+    name: 'Marco Santos',
+    phone: '+13125689550',
+    email: 'pheath@twilio.com',
+    policy_type: 'Whole Life',
+    policy_number: 'POLICY01',
+    premium: '$2,400/yr',
+    coverage: '$350,000',
+    renewal: '2026-08-15',
+    risk_score: 'Low',
+    claim_count: 2,
+    customer_since: '2021',
+    claims: [
+      { number: 'CL-2025-0891', date: '2025-11-03', status: 'Under Review', amount: '$4,200' },
+      { number: 'CL-2024-1456', date: '2024-06-22', status: 'Settled', amount: '$2,800' }
+    ]
+  };
+
   const CUSTOMERS = {
-    policies: {
-      id: 'cust_001',
-      name: 'Maria Santos',
-      phone: '+13125689550',
-      email: 'pheath@twilio.com',
-      policy_type: 'Homeowners',
-      policy_number: 'POLICY01',
-      premium: '$2,400/yr',
-      coverage: '$350,000',
-      renewal: '2026-08-15',
-      risk_score: 'Low',
-      claim_count: 0,
-      customer_since: '2021'
-    },
-    claims: {
-      id: 'cust_007',
-      name: 'Amanda Foster',
-      phone: '+13125689550',
-      email: 'pheath@twilio.com',
-      policy_type: 'Auto',
-      policy_number: 'POLICY02',
-      premium: '$2,100/yr',
-      coverage: '$150,000',
-      renewal: '2026-06-15',
-      risk_score: 'High',
-      claim_count: 3,
-      customer_since: '2020',
-      claims: [
-        { number: 'CL-2025-0891', date: '2025-11-03', status: 'Under Review', amount: '$4,200' },
-        { number: 'CL-2024-1456', date: '2024-06-22', status: 'Settled', amount: '$2,800' },
-        { number: 'CL-2023-0234', date: '2023-02-15', status: 'Settled', amount: '$1,500' }
-      ]
-    }
+    policies: MARCO,
+    claims: MARCO
   };
 
   // State
@@ -327,15 +315,6 @@
     state.currentPage = page;
     const content = $('#site-content');
 
-    // Update nav active state
-    $$('.cc-site-nav-link').forEach(link => {
-      if (link.dataset.page === page) {
-        link.classList.add('active');
-      } else {
-        link.classList.remove('active');
-      }
-    });
-
     // Add page view event
     const pagePaths = {
       home: '/home',
@@ -345,38 +324,12 @@
     };
     addEvent('event', 'page_view', pagePaths[page] || `/${page}`, 'blue');
 
-    if (page === 'policies') {
-      content.innerHTML = `
-        <h2 style="margin-bottom: 24px; color: #1a1d23;">My Policies</h2>
-
-        <div class="cc-policy-card">
-          <div class="cc-policy-header">
-            <div class="cc-policy-number">POLICY01</div>
-            <div class="cc-policy-type-badge">Homeowners</div>
-          </div>
-          <div class="cc-policy-details">
-            <div class="cc-policy-detail">
-              <div class="cc-policy-detail-label">Coverage</div>
-              <div class="cc-policy-detail-value">$350,000</div>
-            </div>
-            <div class="cc-policy-detail">
-              <div class="cc-policy-detail-label">Premium</div>
-              <div class="cc-policy-detail-value">$2,400/yr</div>
-            </div>
-            <div class="cc-policy-detail">
-              <div class="cc-policy-detail-label">Type</div>
-              <div class="cc-policy-detail-value">Homeowners</div>
-            </div>
-            <div class="cc-policy-detail">
-              <div class="cc-policy-detail-label">Renewal</div>
-              <div class="cc-policy-detail-value">Aug 15, 2026</div>
-            </div>
-          </div>
-        </div>
-
+    // Build the call flow overlays (shared between policies and claims pages)
+    function callOverlays(ctaTitle, ctaDesc, connectedDesc) {
+      return `
         <div class="cc-overlay" id="call-overlay">
-          <h3>Need help with your policy?</h3>
-          <p>Our customer service team is available to answer your questions.</p>
+          <h3>${ctaTitle}</h3>
+          <p>${ctaDesc}</p>
           <button class="cc-btn cc-btn-primary" id="call-btn">Call Us Now</button>
         </div>
 
@@ -405,101 +358,54 @@
         <div class="cc-overlay verify hidden" id="connected-overlay">
           <h3>Connected</h3>
           <p class="cc-success-message">Your call is being connected. Please stay on the line.</p>
-          <p>An agent will be with you shortly to assist with your policy inquiry.</p>
+          <p>${connectedDesc}</p>
           <button class="cc-btn" id="end-call-btn">End Call</button>
         </div>
       `;
+    }
+
+    // Screenshot image for each page
+    const screenshotSrcs = {
+      home: 'screenshots/home.png',
+      policies: 'screenshots/policies.png',
+      claims: 'screenshots/claims.png',
+      contact: 'screenshots/home.png'
+    };
+
+    // Preserve the nav and sidebar overlays, clear the rest
+    const navOverlay = content.querySelector('.cc-nav-overlay');
+    const sidebarOverlay = content.querySelector('.cc-sidebar-overlay');
+    content.innerHTML = '';
+    if (navOverlay) content.appendChild(navOverlay);
+    if (sidebarOverlay) content.appendChild(sidebarOverlay);
+
+    // Add the screenshot image
+    const img = document.createElement('img');
+    img.className = 'cc-bg-img';
+    img.src = screenshotSrcs[page] || screenshotSrcs.home;
+    img.alt = '';
+    content.appendChild(img);
+
+    if (page === 'policies') {
+      const wrap = document.createElement('div');
+      wrap.className = 'cc-screenshot-overlay-wrap';
+      wrap.innerHTML = callOverlays(
+        'Need help with your policy?',
+        'Our customer service team is available to answer your questions.',
+        'An agent will be with you shortly to assist with your policy inquiry.'
+      );
+      content.appendChild(wrap);
       bindPageEvents();
     } else if (page === 'claims') {
-      const customer = CUSTOMERS.claims;
-      const claimsRows = customer.claims.map(claim => `
-        <tr>
-          <td>${claim.number}</td>
-          <td>${claim.date}</td>
-          <td><span class="cc-claim-status ${claim.status.toLowerCase().replace(' ', '-')}">${claim.status}</span></td>
-          <td>${claim.amount}</td>
-        </tr>
-      `).join('');
-
-      content.innerHTML = `
-        <h2 style="margin-bottom: 24px; color: #1a1d23;">My Claims</h2>
-
-        <div class="cc-policy-card">
-          <div class="cc-policy-header">
-            <div class="cc-policy-number">${customer.policy_number}</div>
-            <div class="cc-policy-type-badge">${customer.policy_type}</div>
-          </div>
-          <table class="cc-claims-table">
-            <thead>
-              <tr>
-                <th>Claim Number</th>
-                <th>Date</th>
-                <th>Status</th>
-                <th>Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${claimsRows}
-            </tbody>
-          </table>
-        </div>
-
-        <div class="cc-overlay" id="call-overlay">
-          <h3>Questions about your claim?</h3>
-          <p>Speak with a claims specialist to get answers about your open claims.</p>
-          <button class="cc-btn cc-btn-primary" id="call-btn">Call Us Now</button>
-        </div>
-
-        <div class="cc-overlay highlight hidden" id="phone-overlay">
-          <h3>Enter Your Phone Number</h3>
-          <p>We'll send you a verification code to confirm your identity.</p>
-          <input type="tel" class="cc-phone-input" id="phone-input" placeholder="Enter phone number" maxlength="20" />
-          <button class="cc-btn cc-btn-primary" id="submit-phone-btn">Continue</button>
-        </div>
-
-        <div class="cc-overlay verify hidden" id="otp-overlay">
-          <h3>Verify Your Identity</h3>
-          <p>Enter the 6-digit code sent to your phone.</p>
-          <div id="otp-error" class="cc-error-message hidden"></div>
-          <div class="cc-otp-container">
-            <input type="text" class="cc-otp-digit" maxlength="1" data-index="0" />
-            <input type="text" class="cc-otp-digit" maxlength="1" data-index="1" />
-            <input type="text" class="cc-otp-digit" maxlength="1" data-index="2" />
-            <input type="text" class="cc-otp-digit" maxlength="1" data-index="3" />
-            <input type="text" class="cc-otp-digit" maxlength="1" data-index="4" />
-            <input type="text" class="cc-otp-digit" maxlength="1" data-index="5" />
-          </div>
-          <button class="cc-btn cc-btn-success" id="verify-otp-btn">Verify & Connect</button>
-        </div>
-
-        <div class="cc-overlay verify hidden" id="connected-overlay">
-          <h3>Connected</h3>
-          <p class="cc-success-message">Your call is being connected. Please stay on the line.</p>
-          <p>A claims specialist will be with you shortly to discuss your claim.</p>
-          <button class="cc-btn" id="end-call-btn">End Call</button>
-        </div>
-      `;
+      const wrap = document.createElement('div');
+      wrap.className = 'cc-screenshot-overlay-wrap';
+      wrap.innerHTML = callOverlays(
+        'Questions about your claim?',
+        'Speak with a claims specialist to get answers about your open claims.',
+        'A claims specialist will be with you shortly to discuss your claim.'
+      );
+      content.appendChild(wrap);
       bindPageEvents();
-    } else if (page === 'home') {
-      content.innerHTML = `
-        <h2 style="margin-bottom: 24px; color: #1a1d23;">Welcome to SFBLI</h2>
-        <div class="cc-overlay">
-          <h3>Your Insurance Partner</h3>
-          <p>Access your policies, file claims, and manage your insurance coverage all in one place.</p>
-          <p style="margin-top: 16px;">Select <strong>Policies</strong> or <strong>Claims</strong> from the navigation above to get started.</p>
-        </div>
-      `;
-    } else if (page === 'contact') {
-      content.innerHTML = `
-        <h2 style="margin-bottom: 24px; color: #1a1d23;">Contact Us</h2>
-        <div class="cc-overlay">
-          <h3>Get in Touch</h3>
-          <p><strong>Phone:</strong> 1-800-555-SFBL</p>
-          <p><strong>Email:</strong> support@sfbli.com</p>
-          <p><strong>Hours:</strong> Monday - Friday, 8am - 8pm EST</p>
-          <p style="margin-top: 16px;">For faster service, navigate to <strong>Policies</strong> or <strong>Claims</strong> to initiate a call with context about your account.</p>
-        </div>
-      `;
     }
   }
 
@@ -738,16 +644,23 @@
   async function init() {
     await loadConfig();
 
-    // Nav click handlers
-    $$('.cc-site-nav-link').forEach(link => {
+    // Nav click handlers — top nav links, sidebar items, and logo
+    $$('.cc-nav-link, .cc-sidebar-item, .cc-nav-logo').forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
         const page = link.dataset.page;
+        if (!page) return;
 
         // Disable navigation during active call
         if (state.phase === 'connected' || state.phase === 'phone_input' || state.phase === 'otp_verify') {
           alert('Please end your current call before navigating.');
           return;
+        }
+
+        // Update active state on top nav
+        $$('.cc-nav-link').forEach(l => l.classList.remove('cc-nav-link-active'));
+        if (link.classList.contains('cc-nav-link')) {
+          link.classList.add('cc-nav-link-active');
         }
 
         renderPage(page);
