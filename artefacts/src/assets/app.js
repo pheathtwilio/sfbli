@@ -414,6 +414,23 @@
     if (el) el.textContent = text;
   }
 
+  function updateRightPanelHeader(profile) {
+    const container = document.getElementById('right-panel-profile');
+    const avatar = document.getElementById('right-panel-avatar');
+    const name = document.getElementById('right-panel-name');
+    if (!container) return;
+
+    if (!profile) {
+      container.classList.add('hidden');
+      return;
+    }
+
+    const initials = profile.name.split(' ').map(n => n[0]).join('');
+    avatar.textContent = initials;
+    name.textContent = profile.name;
+    container.classList.remove('hidden');
+  }
+
   // ==================== CONVERSATION ====================
   function addConversationMessage(direction, channel, body, profileId) {
     const pid = profileId || state.activeProfileId;
