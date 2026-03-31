@@ -6,7 +6,7 @@
   const FUNCTIONS_BASE = '';
   let CRELAY_BASE = '';
 
-  // Customer profile — same person for both scenarios, page determines context
+  // Customer profiles — page determines which customer is used
   const MARCO = {
     id: 'cust_001',
     name: 'Marco Santos',
@@ -26,10 +26,26 @@
     ]
   };
 
-  const CUSTOMERS = {
-    policies: MARCO,
-    claims: MARCO
+  const JILL = {
+    id: 'cust_003',
+    name: 'Jill Barrientos',
+    phone: '+17187100034',
+    email: 'jbarrientos@twilio.com',
+    policy_type: 'Homeowners',
+    policy_number: 'POLICY02',
+    premium: '$3,100/yr',
+    coverage: '$475,000',
+    renewal: '2026-11-20',
+    risk_score: 'Medium',
+    claim_count: 2,
+    customer_since: '2018',
+    claims: [
+      { number: 'CL-2025-1247', date: '2025-11-03', status: 'Under Review', amount: '$8,500' },
+      { number: 'CL-2024-0832', date: '2024-06-15', status: 'Settled', amount: '$3,200' }
+    ]
   };
+
+  const CUSTOMERS = [MARCO, JILL];
 
   // State
   const state = {
@@ -108,9 +124,10 @@
     }
   }
 
-  // Profile resolution - resolve identity from CUSTOMERS by current page
+  // Profile resolution - look up customer by phone number
   function resolveIdentity(phone) {
-    const customer = CUSTOMERS[state.currentPage];
+    const digits = phone.replace(/\D/g, '').slice(-10);
+    const customer = CUSTOMERS.find(c => c.phone.replace(/\D/g, '').slice(-10) === digits);
     if (!customer) return null;
 
     state.customer = customer;
@@ -238,14 +255,18 @@
 
       if (!CRELAY_BASE) {
         // Demo mode: simulate transcript entries
-        if (state.transcript.length === 0) {
+        if (state.transcript.length === 0 && state.customer) {
+          const c = state.customer;
           setTimeout(() => addTranscript('ai', 'Hello! Thank you for calling SFBLI. How can I assist you today?'), 2000);
           if (state.currentPage === 'policies') {
-            setTimeout(() => addTranscript('customer', 'Hi, I have a question about my homeowners policy.'), 4000);
-            setTimeout(() => addTranscript('ai', 'I can help you with that. I see you have policy POLICY01 with $350,000 coverage. What would you like to know?'), 6000);
+            setTimeout(() => addTranscript('customer', `Hi, I have a question about my ${c.policy_type.toLowerCase()} policy.`), 4000);
+            setTimeout(() => addTranscript('ai', `I can help you with that. I see you have policy ${c.policy_number} with ${c.coverage} coverage. What would you like to know?`), 6000);
           } else if (state.currentPage === 'claims') {
-            setTimeout(() => addTranscript('customer', 'I\'m calling about my recent claim, CL-2025-0891.'), 4000);
-            setTimeout(() => addTranscript('ai', 'I see your claim for $4,200 is currently under review. Let me connect you with a claims specialist who can provide more details.'), 6000);
+            const activeClaim = c.claims && c.claims.find(cl => cl.status === 'Under Review');
+            if (activeClaim) {
+              setTimeout(() => addTranscript('customer', `I'm calling about my recent claim, ${activeClaim.number}.`), 4000);
+              setTimeout(() => addTranscript('ai', `I see your claim for ${activeClaim.amount} is currently under review. Let me connect you with a claims specialist who can provide more details.`), 6000);
+            }
           }
         }
         return;
