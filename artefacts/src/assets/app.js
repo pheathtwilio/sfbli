@@ -719,13 +719,6 @@
     { name: 'underwriting_status_change', time: '5 days ago' }
   ];
 
-  // Live events that animate in one by one
-  const PROFILE_LIVE_EVENTS = [
-    { name: 'page_view', time: 'Just now', delay: 1500 },
-    { name: 'form_start', time: 'Just now', delay: 3500 },
-    { name: 'form_abandon', time: 'Just now', delay: 6000 }
-  ];
-
   // ==================== AUDIENCE WIZARD ====================
   function parseTraitValue(value) {
     if (typeof value === 'number') return value;
@@ -1441,28 +1434,6 @@
     state.lastOutboundProfileId = state.activeProfileId;
   }
 
-  // ==================== PROMOTIONAL OUTREACH ====================
-  function triggerPromotionalOutreach(profile) {
-    const channel = profile.preferred_channel;
-    if (channel === 'rcs_sms' || channel === 'sms') {
-      fetch(`${CONFIG.functionsBaseUrl}/send-rcs`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: profile.phone, contentVariables: JSON.stringify({ '1': profile.name }) })
-      }).then(r => r.json()).then(() => {
-        addConversationMessage('outbound', 'rcs', 'Promotional RCS/SMS sent to ' + profile.name);
-      }).catch(err => console.error('Promo send failed:', err));
-    } else if (channel === 'email') {
-      fetch(`${CONFIG.functionsBaseUrl}/send-email`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: profile.email })
-        // Template details to be added when user provides them
-      }).then(r => r.json()).then(() => {
-        addConversationMessage('outbound', 'email', 'Promotional email sent to ' + profile.name);
-      }).catch(err => console.error('Promo email failed:', err));
-    }
-  }
 
   // ==================== JOURNEY WIZARD ====================
   function renderJourneyWizard(step) {
@@ -1731,7 +1702,7 @@
   }
 
   // ==================== EXPOSE FOR TASK 9 ====================
-  window.__app = { CONFIG, state, dom, updateProfileField, switchView, openAudienceWizard, closeAudienceWizard, computeAudienceMembers, createAudience, renderAudienceDetail, renderAudiencesList, showAudienceDetail, openJourneyWizard, closeJourneyWizard, createJourney, triggerPromotionalOutreach };
+  window.__app = { CONFIG, state, dom, updateProfileField, switchView, openAudienceWizard, closeAudienceWizard, computeAudienceMembers, createAudience, renderAudienceDetail, renderAudiencesList, showAudienceDetail, openJourneyWizard, closeJourneyWizard, createJourney };
 
   // Start the app
   init();
