@@ -1,0 +1,13 @@
+{
+  "name": "Agent Engagement",
+  "description": "Paul Heath engagement events — no form abandon (moved to Step 3)",
+  "profileId": "usr_001",
+  "events": [
+    { "type": "email_delivered", "delay": 0, "label": "Email Delivered: Policy Renewal Reminder" },
+    { "type": "email_opened", "delay": 1500, "label": "Email Opened: Policy Renewal Reminder" },
+    { "type": "page_view", "delay": 3000, "label": "Viewed Auto Insurance Page" },
+    { "type": "page_view", "delay": 4500, "label": "Viewed Get Quote" },
+    { "type": "form_start", "delay": 6000, "label": "Started Quote Form" },
+    { "type": "form_field", "delay": 7500, "label": "Entered Vehicle Type" }
+  ]
+}

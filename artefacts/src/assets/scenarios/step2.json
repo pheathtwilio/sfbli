@@ -1,0 +1,8 @@
+{
+  "name": "Journey Promotion",
+  "description": "Marco Santos journey triggers promotional outreach",
+  "profileId": "cust_001",
+  "events": [
+    { "type": "promotion_sent", "delay": 0, "label": "Journey Triggered: Property & Casualty Promotion" }
+  ]
+}

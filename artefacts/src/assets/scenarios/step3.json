@@ -1,0 +1,17 @@
+{
+  "name": "Policy Class Change",
+  "description": "Policy class change triggers email, then abandoned form events trigger RCS outreach",
+  "profileId": "usr_001",
+  "events": [
+    { "type": "policy_class_change", "delay": 0, "label": "Policy Class Change Detected: Marco Santos" },
+    { "type": "email_sent", "delay": 2000, "label": "Email Sent: Policy Review Required — Paul Heath" },
+    { "type": "form_abandon", "delay": 5000, "label": "Form Abandoned: Quote Form" },
+    { "type": "session_end", "delay": 7000, "label": "Session Ended (Abandoned)" }
+  ],
+  "profile_updates": {
+    "status": "At Risk",
+    "engagement_score_before": 72,
+    "engagement_score_after": 45,
+    "predicted_churn": "High"
+  }
+}
