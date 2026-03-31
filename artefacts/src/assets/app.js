@@ -6,7 +6,10 @@
     functionsBaseUrl: 'https://sfbli-2271-dev.twil.io',
     pollIntervalMs: 3000,
     scenario: new URLSearchParams(window.location.search).get('scenario') || 'default',
-    brand: new URLSearchParams(window.location.search).get('brand') || 'default'
+    brand: new URLSearchParams(window.location.search).get('brand') || 'default',
+    journeyRcsContentSid: '',
+    policyChangeEmailTemplateId: '',
+    promoContentSid: ''
   };
 
   const STEP_SCENARIOS = {};
@@ -402,6 +405,7 @@
       if (data.error) throw new Error(data.error);
       setChannelStatus('voice', 'Ringing...');
       addConversationMessage('system', 'voice', `Voice call initiated (${data.callSid})`);
+      checkStepTransitionOnOutreach();
       setTimeout(() => setChannelStatus('voice', 'Connected'), 3000);
     } catch (e) {
       setChannelStatus('voice', `Error: ${e.message}`);
@@ -1354,6 +1358,74 @@
         <tr><td>phone</td><td>${profile.phone}</td></tr>
       </table>`;
     }
+  }
+
+  // ==================== DEMO STEP HANDLERS ====================
+  function handleStepEvent(evt, profile, stepNumber) {
+    if (stepNumber === 3 && evt.type === 'email_sent') {
+      const templateId = CONFIG.policyChangeEmailTemplateId;
+      if (templateId) {
+        sendEmail(templateId, {
+          customer_name: 'Marco Santos',
+          policy_type: 'Whole Life',
+          agent_name: 'Paul Heath'
+        }, 'Policy Class Change Notification');
+        state.lastOutboundProfileId = profile.id;
+      } else {
+        console.warn('POLICY_CHANGE_EMAIL_TEMPLATE_ID not configured, skipping email send');
+      }
+    }
+
+    if (stepNumber === 3 && evt.type === 'session_end') {
+      const contentSid = CONFIG.promoContentSid;
+      if (contentSid) {
+        sendRcs(contentSid, { '1': profile.name }, 'Promotional Outreach');
+        state.lastOutboundProfileId = profile.id;
+      } else {
+        console.warn('PROMO_CONTENT_SID not configured, skipping RCS send');
+      }
+    }
+  }
+
+  function handleStepComplete(profile, stepNumber) {
+    if (stepNumber === 1) {
+      setOutreachEnabled(true);
+    }
+
+    if (stepNumber === 2) {
+      const contentSid = CONFIG.journeyRcsContentSid;
+      if (contentSid) {
+        const marcoProfile = MOCK_PROFILES.find(p => p.id === 'cust_001');
+        sendRcs(contentSid, { '1': marcoProfile.name }, 'Journey Promotion').then(() => {
+          state.lastOutboundProfileId = 'cust_001';
+          advanceDemoStep(3);
+        });
+      } else {
+        console.warn('JOURNEY_RCS_CONTENT_SID not configured, skipping RCS send');
+        advanceDemoStep(3);
+      }
+      setOutreachEnabled(true);
+    }
+
+    if (stepNumber === 3) {
+      const step3Scenario = STEP_SCENARIOS[3];
+      if (step3Scenario && step3Scenario.profile_updates) {
+        setTimeout(() => applyProfileUpdates(step3Scenario.profile_updates), 1000);
+      }
+      setOutreachEnabled(true);
+    }
+  }
+
+  function advanceDemoStep(toStep) {
+    state.demoStep = toStep;
+    console.log('Demo advanced to step', toStep);
+  }
+
+  function checkStepTransitionOnOutreach() {
+    if (state.demoStep === 1) {
+      advanceDemoStep(2);
+    }
+    state.lastOutboundProfileId = state.activeProfileId;
   }
 
   // ==================== PROMOTIONAL OUTREACH ====================
