@@ -415,34 +415,57 @@
   }
 
   // ==================== CONVERSATION ====================
-  function addConversationMessage(direction, channel, body) {
+  function addConversationMessage(direction, channel, body, profileId) {
+    const pid = profileId || state.activeProfileId;
+    if (!pid) return;
+
+    if (!state.conversations[pid]) state.conversations[pid] = [];
+
+    const msg = { direction, channel, body, timestamp: Date.now() };
+    state.conversations[pid].push(msg);
+
+    if (pid === state.activeProfileId) {
+      renderConversationMessage(msg);
+    }
+  }
+
+  function renderConversationMessage(msg) {
     const empty = dom.conversationThread.querySelector('.conversation-empty');
     if (empty) empty.remove();
 
     const div = document.createElement('div');
     const channelIcons = { rcs: '&#128172;', sms: '&#128172;', email: '&#9993;', voice: '&#128222;' };
 
-    if (direction === 'system') {
+    if (msg.direction === 'system') {
       div.className = 'msg-bubble msg-system';
       div.innerHTML = `
-        <span class="msg-channel-icon">${channelIcons[channel] || ''}</span>
-        <span>${body}</span>
-        <span class="msg-time">${new Date().toLocaleTimeString()}</span>
+        <span class="msg-channel-icon">${channelIcons[msg.channel] || ''}</span>
+        <span>${msg.body}</span>
+        <span class="msg-time">${new Date(msg.timestamp).toLocaleTimeString()}</span>
       `;
     } else {
-      div.className = `msg-bubble msg-${direction}`;
+      div.className = `msg-bubble msg-${msg.direction}`;
       div.innerHTML = `
-        <div class="msg-body">${body}</div>
+        <div class="msg-body">${msg.body}</div>
         <div class="msg-meta">
-          <span class="msg-channel-icon">${channelIcons[channel] || ''}</span>
-          <span class="msg-time">${new Date().toLocaleTimeString()}</span>
+          <span class="msg-channel-icon">${channelIcons[msg.channel] || ''}</span>
+          <span class="msg-time">${new Date(msg.timestamp).toLocaleTimeString()}</span>
         </div>
       `;
     }
 
     dom.conversationThread.appendChild(div);
     dom.conversationThread.scrollTop = dom.conversationThread.scrollHeight;
-    state.conversation.push({ direction, channel, body, timestamp: Date.now() });
+  }
+
+  function renderConversationForProfile(profileId) {
+    dom.conversationThread.innerHTML = '';
+    const messages = state.conversations[profileId] || [];
+    if (messages.length === 0) {
+      dom.conversationThread.innerHTML = '<div class="conversation-empty">No messages yet. Send outreach to begin.</div>';
+      return;
+    }
+    messages.forEach(msg => renderConversationMessage(msg));
   }
 
   // ==================== POLLING ====================
@@ -456,12 +479,12 @@
         const data = await resp.json();
         if (data.messages && data.messages.length > 0) {
           data.messages.forEach(msg => {
-            // Resolve sender name from profile data
+            const targetProfileId = state.lastOutboundProfileId || state.activeProfileId;
             const fromNumber = (msg.from || '').replace(/\D/g, '');
             const match = MOCK_PROFILES.find(p => p.phone.replace(/\D/g, '') === fromNumber);
             const senderName = match ? match.name : msg.from;
             const displayBody = senderName ? `<strong>${senderName}:</strong> ${msg.body}` : msg.body;
-            addConversationMessage('inbound', msg.channel || 'sms', displayBody);
+            addConversationMessage('inbound', msg.channel || 'sms', displayBody, targetProfileId);
             state.lastPollTimestamp = Math.max(state.lastPollTimestamp, msg.timestamp);
           });
         }
@@ -1131,6 +1154,10 @@
   }
 
   function showProfileDetail(profile) {
+    state.activeProfileId = profile.id;
+    renderConversationForProfile(profile.id);
+    updateRightPanelHeader(profile);
+
     document.getElementById('profile-list-container').classList.add('hidden');
     const detail = document.getElementById('profile-detail');
     detail.classList.remove('hidden');
@@ -1157,6 +1184,7 @@
     renderProfileTab('traits', profile);
 
     document.getElementById('profile-back-btn').onclick = () => {
+      state.activeProfileId = null;
       detail.classList.add('hidden');
       document.getElementById('profile-list-container').classList.remove('hidden');
     };
