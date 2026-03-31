@@ -1256,47 +1256,72 @@
       ).join('')}</table>`;
 
     } else if (tabName === 'events') {
-      // Show historical events immediately
-      container.innerHTML = `<div class="profile-events-list" id="profile-events-list">${PROFILE_HISTORY_EVENTS.map(e =>
-        `<div class="profile-event-row"><span class="profile-event-dot"></span><span class="profile-event-name">${e.name}</span><span class="profile-event-time">${e.time}</span></div>`
-      ).join('')}</div>`;
-
-      // Animate live events appearing one by one
+      container.innerHTML = '<div class="profile-events-list" id="profile-events-list"></div>';
       const list = document.getElementById('profile-events-list');
-      PROFILE_LIVE_EVENTS.forEach(e => {
-        setTimeout(() => {
-          if (!list.isConnected) return; // tab switched away
+
+      // Check if this profile has demo events for the current step
+      const stepConfig = {
+        'usr_001': { 1: 'step1', 3: 'step3' },
+        'cust_001': { 2: 'step2' }
+      };
+
+      const profileSteps = stepConfig[profile.id];
+      if (!profileSteps) return;
+
+      const scenarioKey = profileSteps[state.demoStep];
+      if (!scenarioKey) return;
+
+      const stepNumber = state.demoStep;
+
+      // If already played, show events statically
+      if (state.stepsPlayed.has(stepNumber)) {
+        const events = state.profileEvents[profile.id] || [];
+        events.forEach(evt => {
           const row = document.createElement('div');
-          row.className = 'profile-event-row entering';
-          const isWarning = e.name === 'form_abandon';
-          row.innerHTML = `<span class="profile-event-dot${isWarning ? ' dot-warning' : ''}"></span><span class="profile-event-name">${e.name}</span><span class="profile-event-time">${e.time}</span>`;
+          row.className = 'profile-event-row';
+          const isWarning = evt.type === 'form_abandon' || evt.type === 'session_end';
+          row.innerHTML = `<span class="profile-event-dot${isWarning ? ' dot-warning' : ''}"></span><span class="profile-event-name">${evt.label || evt.type}</span><span class="profile-event-time">Just now</span>`;
           list.prepend(row);
-          setTimeout(() => row.classList.remove('entering'), 350);
-          if (e.name === 'form_abandon') {
-            setOutreachEnabled(true);
-          }
-        }, e.delay);
+        });
+        return;
+      }
+
+      // Show any previously stored events for this profile (e.g., Step 1 events when Step 3 starts)
+      const existingEvents = state.profileEvents[profile.id] || [];
+      existingEvents.forEach(evt => {
+        const row = document.createElement('div');
+        row.className = 'profile-event-row';
+        const isWarning = evt.type === 'form_abandon' || evt.type === 'session_end';
+        row.innerHTML = `<span class="profile-event-dot${isWarning ? ' dot-warning' : ''}"></span><span class="profile-event-name">${evt.label || evt.type}</span><span class="profile-event-time">Just now</span>`;
+        list.prepend(row);
       });
 
-      // Check if profile qualifies for a journey — add promotion_sent event
-      const qualifyingJourney = state.journeys.find(j => {
-        const audience = state.audiences.find(a => a.key === j.audience_key);
-        return audience && audience.members.includes(profile.id);
-      });
+      // Play this step's events
+      const scenario = STEP_SCENARIOS[stepNumber];
+      if (!scenario || !scenario.events) return;
 
-      if (qualifyingJourney) {
+      if (!state.profileEvents[profile.id]) state.profileEvents[profile.id] = [];
+
+      scenario.events.forEach((evt, index) => {
         setTimeout(() => {
           if (!list.isConnected) return;
           const row = document.createElement('div');
           row.className = 'profile-event-row entering';
-          row.innerHTML = '<span class="profile-event-dot dot-success"></span>' +
-            '<span class="profile-event-name">promotion_sent</span>' +
-            '<span class="profile-event-time">Just now</span>';
+          const isWarning = evt.type === 'form_abandon' || evt.type === 'session_end';
+          row.innerHTML = `<span class="profile-event-dot${isWarning ? ' dot-warning' : ''}"></span><span class="profile-event-name">${evt.label || evt.type}</span><span class="profile-event-time">Just now</span>`;
           list.prepend(row);
           setTimeout(() => row.classList.remove('entering'), 350);
-          triggerPromotionalOutreach(profile);
-        }, 8000);
-      }
+
+          state.profileEvents[profile.id].push(evt);
+
+          handleStepEvent(evt, profile, stepNumber);
+
+          if (index === scenario.events.length - 1) {
+            state.stepsPlayed.add(stepNumber);
+            handleStepComplete(profile, stepNumber);
+          }
+        }, evt.delay);
+      });
 
     } else if (tabName === 'audiences') {
       const matching = state.audiences.filter(a => a.members.includes(profile.id));
