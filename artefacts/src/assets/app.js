@@ -475,13 +475,22 @@
   function setupEventListeners() {
     dom.editProfileBtn.addEventListener('click', toggleProfileEdit);
 
-    dom.replayBtn.addEventListener('click', async () => {
-      const scenario = await loadScenario(CONFIG.scenario);
-      if (scenario) {
-        // Reset profile to initial state
-        await loadBrand(CONFIG.brand);
-        playScenario(scenario);
-      }
+    dom.replayBtn.addEventListener('click', () => {
+      // Reset state machine
+      state.demoStep = 1;
+      state.stepsPlayed = new Set();
+      state.activeProfileId = null;
+      state.profileEvents = {};
+      state.conversations = {};
+      state.lastOutboundProfileId = null;
+      state.events = [];
+      state.outreachEnabled = false;
+
+      // Clear UI
+      dom.eventList.innerHTML = '';
+      dom.conversationThread.innerHTML = '<div class="conversation-empty">No messages yet. Send outreach to begin.</div>';
+      setOutreachEnabled(false);
+      updateRightPanelHeader(null);
     });
 
     dom.btnRcs.addEventListener('click', () => showTemplateSelector('rcs'));
@@ -602,12 +611,6 @@
       document.getElementById('audience-detail').classList.add('hidden');
     }
 
-    // If switching to events view and scenario hasn't played, trigger it
-    if (viewName === 'home' || viewName === 'engage') {
-      if (state.events.length === 0) {
-        loadScenario(CONFIG.scenario).then(scenario => playScenario(scenario));
-      }
-    }
   }
 
   function setupSidebarListeners() {
