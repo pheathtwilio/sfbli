@@ -5,11 +5,11 @@
   const CONFIG = {
     functionsBaseUrl: 'https://sfbli-2271-dev.twil.io',
     pollIntervalMs: 3000,
-    scenario: new URLSearchParams(window.location.search).get('scenario') || 'default',
     brand: new URLSearchParams(window.location.search).get('brand') || 'default',
     journeyRcsContentSid: '',
     policyChangeEmailTemplateId: '',
-    promoContentSid: ''
+    promoContentSid: '',
+    configLoaded: false
   };
 
   const STEP_SCENARIOS = {};
@@ -95,58 +95,6 @@
       console.error('Failed to load scenario:', error);
       return null;
     }
-  }
-
-  function playScenario(scenario) {
-    if (!scenario || !scenario.events) return;
-
-    // Clear event list
-    dom.eventList.innerHTML = '';
-    state.events = [];
-
-    // Replay events with delay
-    scenario.events.forEach((evt, index) => {
-      setTimeout(() => {
-        renderEvent(evt);
-        state.events.push(evt);
-
-        // After the last event, apply profile updates
-        if (index === scenario.events.length - 1 && scenario.profile_updates) {
-          setTimeout(() => {
-            applyProfileUpdates(scenario.profile_updates);
-          }, 1000);
-        }
-      }, evt.delay);
-    });
-  }
-
-  function renderEvent(evt) {
-    const eventItem = document.createElement('div');
-    eventItem.className = 'event-item entering';
-
-    // Add warning class for abandon/session_end types
-    if (evt.type === 'form_abandon' || evt.type === 'session_end') {
-      eventItem.classList.add('event-warning');
-    }
-
-    const icon = getEventIcon(evt.type);
-    const label = evt.label || evt.type;
-
-    eventItem.innerHTML = `
-      <span class="event-icon">${icon}</span>
-      <div class="event-details">
-        <div class="event-label">${label}</div>
-        <div class="event-meta">${evt.type}</div>
-      </div>
-    `;
-
-    // Prepend to event list (newest first)
-    dom.eventList.prepend(eventItem);
-
-    // Remove entering class after animation
-    setTimeout(() => {
-      eventItem.classList.remove('entering');
-    }, 300);
   }
 
   function getEventIcon(type) {
@@ -711,14 +659,6 @@
     { id: 'cust_010', type: 'customer', name: 'James Morrison', email: 'j.morrison@gmail.com', phone: '+1 (954) 555-0612', region: 'Southeast', status: 'Active', policy_type: 'Auto', policy_number: 'AU-2024-44729', premium_amount: '$1,500/yr', coverage_amount: '$100,000', claim_count: 0, customer_since: '2024', renewal_date: '2027-01-20', risk_score: 'Low', preferred_channel: 'rcs_sms' }
   ];
 
-  // Historical events shown immediately when Events tab opens
-  const PROFILE_HISTORY_EVENTS = [
-    { name: 'email_opened', time: '1 hour ago' },
-    { name: 'sms_delivered', time: '2 hours ago' },
-    { name: 'policy_app_submitted', time: '3 days ago' },
-    { name: 'underwriting_status_change', time: '5 days ago' }
-  ];
-
   // ==================== AUDIENCE WIZARD ====================
   function parseTraitValue(value) {
     if (typeof value === 'number') return value;
@@ -1279,7 +1219,18 @@
       if (!profileSteps) return;
 
       const scenarioKey = profileSteps[state.demoStep];
-      if (!scenarioKey) return;
+      if (!scenarioKey) {
+        // No events for this step, but show any previously stored events statically
+        const existingEvents = state.profileEvents[profile.id] || [];
+        existingEvents.forEach(evt => {
+          const row = document.createElement('div');
+          row.className = 'profile-event-row';
+          const isWarning = evt.type === 'form_abandon' || evt.type === 'session_end';
+          row.innerHTML = `<span class="profile-event-dot${isWarning ? ' dot-warning' : ''}"></span><span class="profile-event-name">${evt.label || evt.type}</span><span class="profile-event-time">Just now</span>`;
+          list.prepend(row);
+        });
+        return;
+      }
 
       const stepNumber = state.demoStep;
 
@@ -1668,6 +1619,18 @@
     fetch(`${CONFIG.functionsBaseUrl}/clear-messages`, { method: 'POST' }).catch(() => {});
 
     await loadBrand(CONFIG.brand);
+
+    // Load config from server (template SIDs)
+    try {
+      const configResp = await fetch(`${CONFIG.functionsBaseUrl}/get-config`);
+      const configData = await configResp.json();
+      CONFIG.promoContentSid = configData.promoContentSid || '';
+      CONFIG.journeyRcsContentSid = configData.journeyRcsContentSid || '';
+      CONFIG.policyChangeEmailTemplateId = configData.policyChangeEmailTemplateId || '';
+      CONFIG.configLoaded = true;
+    } catch (e) {
+      console.warn('Failed to load config from server:', e);
+    }
 
     // Load step scenarios
     const [step1, step2, step3] = await Promise.all([
