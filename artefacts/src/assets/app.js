@@ -9,11 +9,13 @@
     brand: new URLSearchParams(window.location.search).get('brand') || 'default'
   };
 
+  const STEP_SCENARIOS = {};
+
   // ==================== STATE ====================
   const state = {
     profile: {},
     events: [],
-    conversation: [],
+    conversations: {},
     templates: { content: [], sendgrid: [] },
     pollTimer: null,
     lastPollTimestamp: 0,
@@ -23,7 +25,12 @@
     audiences: [],
     journeys: [],
     activeWizard: null,
-    wizardStep: 0
+    wizardStep: 0,
+    demoStep: 1,
+    stepsPlayed: new Set(),
+    activeProfileId: null,
+    profileEvents: {},
+    lastOutboundProfileId: null
   };
 
   // ==================== DOM REFERENCES ====================
@@ -156,6 +163,9 @@
       'policy_issued': '&#9989;',     // Check
       'underwriting_status_change': '&#128260;', // Arrows
       'underwriting_class_change': '&#128260;',  // Arrows
+      'promotion_sent': '&#128640;',       // Rocket
+      'policy_class_change': '&#128260;',   // Arrows
+      'email_sent': '&#9993;',             // Envelope
       'default': '&#9679;'            // Bullet
     };
     return iconMap[type] || iconMap.default;
@@ -1529,6 +1539,17 @@
     fetch(`${CONFIG.functionsBaseUrl}/clear-messages`, { method: 'POST' }).catch(() => {});
 
     await loadBrand(CONFIG.brand);
+
+    // Load step scenarios
+    const [step1, step2, step3] = await Promise.all([
+      loadScenario('step1'),
+      loadScenario('step2'),
+      loadScenario('step3')
+    ]);
+    STEP_SCENARIOS[1] = step1;
+    STEP_SCENARIOS[2] = step2;
+    STEP_SCENARIOS[3] = step3;
+
     await loadTemplates();
     renderProfileTable();
     setupSidebarListeners();
