@@ -256,24 +256,28 @@
   // ==================== OUTREACH CONTROLS ====================
   function setOutreachEnabled(enabled) {
     state.outreachEnabled = enabled;
-    dom.btnRcs.disabled = !enabled;
-    dom.btnEmail.disabled = !enabled;
-    dom.btnVoice.disabled = !enabled;
-    dom.conversationInput.disabled = !enabled;
-    dom.conversationSendBtn.disabled = !enabled;
+    const isDemoProfile = state.activeProfileId === 'usr_001' || state.activeProfileId === 'cust_001';
+    const actualEnabled = enabled && isDemoProfile;
+    dom.btnRcs.disabled = !actualEnabled;
+    dom.btnEmail.disabled = !actualEnabled;
+    dom.btnVoice.disabled = !actualEnabled;
+    dom.conversationInput.disabled = !actualEnabled;
+    dom.conversationSendBtn.disabled = !actualEnabled;
   }
 
   async function sendReply(body) {
-    if (!state.profile.phone || !body.trim()) return;
+    const activeProfile = MOCK_PROFILES.find(p => p.id === state.activeProfileId);
+    if (!activeProfile || !body.trim()) return;
     try {
       const resp = await fetch(`${CONFIG.functionsBaseUrl}/send-reply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: state.profile.phone, body: body.trim() })
+        body: JSON.stringify({ to: activeProfile.phone, body: body.trim() })
       });
       const data = await resp.json();
       if (data.error) throw new Error(data.error);
       addConversationMessage('outbound', 'sms', body.trim());
+      state.lastOutboundProfileId = state.activeProfileId;
     } catch (e) {
       addConversationMessage('system', 'sms', `Failed to send: ${e.message}`);
     }
@@ -329,7 +333,8 @@
 
   // ==================== SEND ACTIONS ====================
   async function sendRcs(contentSid, contentVariables, templateName) {
-    if (!state.profile.phone) {
+    const activeProfile = MOCK_PROFILES.find(p => p.id === state.activeProfileId);
+    if (!activeProfile || !activeProfile.phone) {
       setChannelStatus('rcs', 'Error: No phone number set');
       return;
     }
@@ -339,7 +344,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          to: state.profile.phone,
+          to: activeProfile.phone,
           contentSid,
           contentVariables: JSON.stringify(contentVariables)
         })
@@ -347,7 +352,6 @@
       const data = await resp.json();
       if (data.error) throw new Error(data.error);
       setChannelStatus('rcs', 'Delivered');
-      // Show template name and variable values in conversation
       const varSummary = Object.entries(contentVariables)
         .filter(([, v]) => v)
         .map(([k, v]) => `${k}: ${v}`)
@@ -356,13 +360,15 @@
         ? `${templateName}${varSummary ? ' (' + varSummary + ')' : ''}`
         : `RCS/SMS sent`;
       addConversationMessage('outbound', 'rcs', displayMsg);
+      checkStepTransitionOnOutreach();
     } catch (e) {
       setChannelStatus('rcs', `Error: ${e.message}`);
     }
   }
 
   async function sendEmail(templateId, dynamicData, templateName) {
-    if (!state.profile.email) {
+    const activeProfile = MOCK_PROFILES.find(p => p.id === state.activeProfileId);
+    if (!activeProfile || !activeProfile.email) {
       setChannelStatus('email', 'Error: No email address set');
       return;
     }
@@ -372,7 +378,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          to: state.profile.email,
+          to: activeProfile.email,
           templateId,
           dynamicData: JSON.stringify(dynamicData)
         })
@@ -381,16 +387,18 @@
       if (data.error) throw new Error(data.error);
       setChannelStatus('email', 'Sent');
       const emailDisplay = templateName
-        ? `${templateName} sent to ${state.profile.email}`
-        : `Email sent to ${state.profile.email}`;
+        ? `${templateName} sent to ${activeProfile.email}`
+        : `Email sent to ${activeProfile.email}`;
       addConversationMessage('outbound', 'email', emailDisplay);
+      checkStepTransitionOnOutreach();
     } catch (e) {
       setChannelStatus('email', `Error: ${e.message}`);
     }
   }
 
   async function triggerVoiceCall() {
-    if (!state.profile.phone) {
+    const activeProfile = MOCK_PROFILES.find(p => p.id === state.activeProfileId);
+    if (!activeProfile || !activeProfile.phone) {
       setChannelStatus('voice', 'Error: No phone number set');
       return;
     }
@@ -399,7 +407,7 @@
       const resp = await fetch(`${CONFIG.functionsBaseUrl}/trigger-call`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: state.profile.phone })
+        body: JSON.stringify({ to: activeProfile.phone })
       });
       const data = await resp.json();
       if (data.error) throw new Error(data.error);
@@ -1178,6 +1186,11 @@
     state.activeProfileId = profile.id;
     renderConversationForProfile(profile.id);
     updateRightPanelHeader(profile);
+
+    // Re-evaluate outreach button state for this profile
+    const shouldEnable = (profile.id === 'usr_001' && (state.stepsPlayed.has(1) || state.stepsPlayed.has(3)))
+      || (profile.id === 'cust_001' && state.stepsPlayed.has(2));
+    setOutreachEnabled(shouldEnable);
 
     document.getElementById('profile-list-container').classList.add('hidden');
     const detail = document.getElementById('profile-detail');
