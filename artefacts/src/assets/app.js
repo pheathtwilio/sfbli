@@ -9,6 +9,7 @@
     journeyRcsContentSid: '',
     policyChangeEmailTemplateId: '',
     promoContentSid: '',
+    promoEmailTemplateId: '',
     configLoaded: false
   };
 
@@ -1319,13 +1320,24 @@
 
   // ==================== DEMO STEP HANDLERS ====================
   function handleStepEvent(evt, profile, stepNumber) {
+    // Step 1: auto-send cross-sell promo email
+    if (stepNumber === 1 && evt.type === 'email_delivered') {
+      const templateId = CONFIG.promoEmailTemplateId;
+      if (templateId) {
+        sendEmail(templateId, {
+          first_name: profile.name.split(' ')[0]
+        }, 'Cross Sell Promotion');
+        state.lastOutboundProfileId = profile.id;
+      } else {
+        console.warn('PROMO_EMAIL_TEMPLATE_ID not configured, skipping email send');
+      }
+    }
+
     if (stepNumber === 3 && evt.type === 'email_sent') {
       const templateId = CONFIG.policyChangeEmailTemplateId;
       if (templateId) {
         sendEmail(templateId, {
-          customer_name: 'Marco Santos',
-          policy_type: 'Whole Life',
-          agent_name: 'Paul Heath'
+          first_name: profile.name.split(' ')[0]
         }, 'Policy Class Change Notification');
         state.lastOutboundProfileId = profile.id;
       } else {
@@ -1627,6 +1639,7 @@
       CONFIG.promoContentSid = configData.promoContentSid || '';
       CONFIG.journeyRcsContentSid = configData.journeyRcsContentSid || '';
       CONFIG.policyChangeEmailTemplateId = configData.policyChangeEmailTemplateId || '';
+      CONFIG.promoEmailTemplateId = configData.promoEmailTemplateId || '';
       CONFIG.configLoaded = true;
     } catch (e) {
       console.warn('Failed to load config from server:', e);

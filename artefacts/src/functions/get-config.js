@@ -15,7 +15,8 @@ exports.handler = function (context, event, callback) {
   response.setBody({
     promoContentSid: context.PROMO_CONTENT_SID || '',
     journeyRcsContentSid: context.JOURNEY_RCS_CONTENT_SID || '',
-    policyChangeEmailTemplateId: context.POLICY_CHANGE_EMAIL_TEMPLATE_ID || ''
+    policyChangeEmailTemplateId: context.POLICY_CHANGE_EMAIL_TEMPLATE_ID || '',
+    promoEmailTemplateId: context.PROMO_EMAIL_TEMPLATE_ID || ''
   });
   return callback(null, response);
 };
