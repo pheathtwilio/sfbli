@@ -19,10 +19,10 @@
     renewal: '2026-08-15',
     risk_score: 'Low',
     claim_count: 2,
-    customer_since: '2021',
+    customer_since: 'August 2024',
     claims: [
-      { number: 'CL-2025-0891', date: '2025-11-03', status: 'Under Review', amount: '$4,200' },
-      { number: 'CL-2024-1456', date: '2024-06-22', status: 'Settled', amount: '$2,800' }
+      { number: 'CL-2025-1247', date: '2025-11-03', status: 'Under Review', amount: '$8,500', description: 'Storm damage — roof and siding' },
+      { number: 'CL-2024-0832', date: '2024-06-15', status: 'Settled', amount: '$3,200' }
     ]
   };
 
@@ -339,9 +339,18 @@
     // Add page view event
     const pagePaths = {
       home: '/home',
+      about: '/about-us',
+      blog: '/blog',
+      products: '/products',
+      services: '/services',
       policies: '/policies',
+      'pay-online': '/pay-online',
+      login: '/login',
       claims: '/claims',
-      contact: '/contact'
+      contact: '/contact',
+      calculator: '/calculator',
+      'find-agent': '/find-agent',
+      careers: '/careers'
     };
     addEvent('event', 'page_view', pagePaths[page] || `/${page}`, 'blue');
 
@@ -590,8 +599,30 @@
       verificationStatus: 'approved'
     };
 
-    if (state.currentPage === 'claims' && customer.claims) {
-      context.recent_claims = customer.claims;
+    // Enrichment for Flex CRM panel
+    const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    context.sentiment = 'Neutral';
+    context.interactions = [
+      { type: 'rcs', description: 'Property & Casualty Promotion sent via RCS', timestamp: today },
+      { type: 'web', description: 'Visited sfbli.com — Home and Policies pages', timestamp: today },
+      { type: 'call', description: 'Inbound call — AI Agent triage', timestamp: 'Just now' }
+    ];
+    context.verificationMethods = [
+      { method: 'OTP', status: 'Verified', detail: 'SMS one-time passcode verified' },
+      { method: 'Verbal', status: 'Verified', detail: 'AI Agent confirmed identity verbally' }
+    ];
+    context.claims = customer.claims || [];
+    context.verificationStatus = 'Verified';
+
+    // Save full context server-side so handoff.js can retrieve it (CRelay may not forward all fields)
+    try {
+      await fetch(`${FUNCTIONS_BASE}/save-context`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: phone, contextData: JSON.stringify(context) })
+      });
+    } catch (e) {
+      console.warn('Failed to save context:', e.message);
     }
 
     await postContextToCRelay(context);
