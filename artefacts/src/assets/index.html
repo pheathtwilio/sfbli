@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Segment Demo</title>
-  <link rel="stylesheet" href="style.css?v=20260406e">
+  <link rel="stylesheet" href="style.css?v=20260406f">
 </head>
 <body>
   <div class="app">
@@ -374,41 +374,64 @@
         </div>
       </div>
 
+      <!-- Channel Controls -->
+      <div class="rp-outreach-section" id="outreach-section">
+        <div class="rp-section-label">Outreach</div>
+
+        <!-- Template Selector (hidden by default) -->
+        <div class="rp-template-selector hidden" id="template-selector">
+          <div class="rp-template-header">
+            <span class="rp-template-title" id="template-selector-title">Select Template</span>
+            <button class="rp-template-close" id="template-cancel-btn">&times;</button>
+          </div>
+          <select class="rp-template-dropdown" id="template-dropdown">
+            <option value="">Loading templates...</option>
+          </select>
+          <div class="rp-template-variables" id="template-variables"></div>
+          <button class="rp-btn rp-btn-primary" id="template-send-btn">Send</button>
+        </div>
+
+        <!-- Channel Buttons -->
+        <div class="rp-channel-controls" id="channel-controls">
+          <button class="rp-btn rp-btn-channel" data-channel="rcs" id="btn-rcs">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            Send RCS / SMS
+            <span class="rp-channel-status" id="status-rcs"></span>
+          </button>
+          <button class="rp-btn rp-btn-channel" data-channel="email" id="btn-email">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            Send Email
+            <span class="rp-channel-status" id="status-email"></span>
+          </button>
+          <button class="rp-btn rp-btn-channel" data-channel="voice" id="btn-voice">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+            Trigger Voice Call
+            <span class="rp-channel-status" id="status-voice"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Activity Stream -->
       <div class="rp-activity-stream">
-        <div class="rp-section-label">Outreach Activity</div>
+        <div class="rp-section-label">Activity</div>
         <div class="rp-event-list" id="conversation-thread">
           <div class="rp-empty">Select a profile and run a scenario to see activity.</div>
         </div>
+      </div>
+
+      <!-- Message Input -->
+      <div class="rp-input-bar">
+        <input type="text" class="rp-input-field" id="conversation-input" placeholder="Type a reply..." disabled>
+        <button class="rp-btn rp-btn-send" id="conversation-send-btn" disabled>Send</button>
       </div>
 
       <div class="rp-status-bar" id="rp-status-bar">
         <div class="rp-status-dot"></div>
         <div class="rp-status-text" id="rp-status-text">Ready</div>
       </div>
-
-      <!-- Hidden elements to maintain JS compatibility -->
-      <div class="hidden" id="template-selector">
-        <span id="template-selector-title"></span>
-        <select id="template-dropdown"></select>
-        <div id="template-variables"></div>
-        <button id="template-send-btn"></button>
-        <button id="template-cancel-btn"></button>
-      </div>
-      <div class="hidden" id="channel-controls">
-        <button id="btn-rcs" disabled></button>
-        <button id="btn-email" disabled></button>
-        <button id="btn-voice" disabled></button>
-        <span id="status-rcs"></span>
-        <span id="status-email"></span>
-        <span id="status-voice"></span>
-      </div>
-      <div class="hidden">
-        <input id="conversation-input" disabled>
-        <button id="conversation-send-btn" disabled></button>
-      </div>
     </aside>
   </div>
 
-  <script src="app.js?v=20260406e"></script>
+  <script src="app.js?v=20260406f"></script>
 </body>
 </html>
