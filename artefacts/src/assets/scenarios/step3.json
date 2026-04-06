@@ -1,12 +1,16 @@
 {
   "name": "Policy Class Change",
-  "description": "Policy class change triggers email, then abandoned form events trigger RCS outreach",
+  "description": "Policy change triggers email, site visit/abandon events, then RCS escalation",
   "profileId": "usr_001",
   "events": [
     { "type": "policy_class_change", "delay": 0, "label": "Policy Class Change Detected: Marco Santos" },
-    { "type": "email_sent", "delay": 2000, "label": "Email Sent: Policy Review Required — Paul Heath" },
-    { "type": "form_abandon", "delay": 5000, "label": "Form Abandoned: Quote Form" },
-    { "type": "session_end", "delay": 7000, "label": "Session Ended (Abandoned)" }
+    { "type": "email_sent", "delay": 2000, "label": "Email Sent: sfbli-policy-change" },
+    { "type": "page_view", "delay": 5000, "label": "Page View: sfbli.com/agent-portal" },
+    { "type": "page_view", "delay": 6500, "label": "Page View: Policy Change Form" },
+    { "type": "form_start", "delay": 8000, "label": "Form Started: Policy Change Form" },
+    { "type": "form_abandon", "delay": 10000, "label": "Form Abandoned: Policy Change Form" },
+    { "type": "session_end", "delay": 12000, "label": "Session Ended (Abandoned)" },
+    { "type": "rcs_sent", "delay": 14000, "label": "RCS Sent: policy_change_escalation" }
   ],
   "profile_updates": {
     "status": "At Risk",

@@ -8,6 +8,7 @@
     brand: new URLSearchParams(window.location.search).get('brand') || 'default',
     journeyRcsContentSid: '',
     policyChangeEmailTemplateId: '',
+    policyChangeRcsContentSid: '',
     promoContentSid: '',
     promoEmailTemplateId: '',
     configLoaded: false
@@ -99,28 +100,30 @@
   }
 
   function getEventIcon(type) {
-    const iconMap = {
-      'page_view': '&#128196;',      // Document
-      'form_start': '&#9998;',        // Pencil
-      'form_field': '&#9999;',        // Keyboard
-      'form_abandon': '&#9888;',      // Warning
-      'session_end': '&#10060;',      // Cross mark
-      'click': '&#128433;',           // Mouse pointer
-      'email_delivered': '&#9993;',   // Envelope
-      'email_opened': '&#128172;',    // Speech bubble
-      'sms_delivered': '&#128241;',   // Mobile phone
-      'sms_opened': '&#128172;',      // Speech bubble
-      'sms_reply': '&#128172;',       // Speech bubble
-      'policy_app_submitted': '&#128196;', // Document
-      'policy_issued': '&#9989;',     // Check
-      'underwriting_status_change': '&#128260;', // Arrows
-      'underwriting_class_change': '&#128260;',  // Arrows
-      'promotion_sent': '&#128640;',       // Rocket
-      'policy_class_change': '&#128260;',   // Arrows
-      'email_sent': '&#9993;',             // Envelope
-      'default': '&#9679;'            // Bullet
+    // Returns a CSS class for colored dot indicators (no emojis)
+    const colorMap = {
+      'page_view': 'dot-blue',
+      'form_start': 'dot-blue',
+      'form_field': 'dot-blue',
+      'form_abandon': 'dot-warning',
+      'session_end': 'dot-warning',
+      'click': 'dot-blue',
+      'email_delivered': 'dot-green',
+      'email_opened': 'dot-green',
+      'email_sent': 'dot-green',
+      'sms_delivered': 'dot-green',
+      'sms_opened': 'dot-green',
+      'sms_reply': 'dot-green',
+      'rcs_sent': 'dot-green',
+      'policy_app_submitted': 'dot-blue',
+      'policy_issued': 'dot-green',
+      'underwriting_status_change': 'dot-amber',
+      'underwriting_class_change': 'dot-amber',
+      'promotion_sent': 'dot-purple',
+      'policy_class_change': 'dot-amber',
+      'default': ''
     };
-    return iconMap[type] || iconMap.default;
+    return colorMap[type] || colorMap.default;
   }
 
   function applyProfileUpdates(updates) {
@@ -376,20 +379,39 @@
   }
 
   function updateRightPanelHeader(profile) {
-    const container = document.getElementById('right-panel-profile');
     const avatar = document.getElementById('right-panel-avatar');
     const name = document.getElementById('right-panel-name');
-    if (!container) return;
+    const badges = document.getElementById('right-panel-badges');
+    if (!avatar || !name) return;
 
     if (!profile) {
-      container.classList.add('hidden');
+      avatar.textContent = '?';
+      name.textContent = 'No profile selected';
+      if (badges) badges.innerHTML = '';
       return;
     }
 
     const initials = profile.name.split(' ').map(n => n[0]).join('');
     avatar.textContent = initials;
     name.textContent = profile.name;
-    container.classList.remove('hidden');
+
+    if (badges) {
+      const statusClass = (profile.status || '').toLowerCase().includes('risk') ? 'badge-warning' : 'badge-active';
+      const typeLabel = profile.type === 'customer' ? 'Customer' : 'Agent';
+      badges.innerHTML = `
+        <span class="rp-profile-badge">${typeLabel}</span>
+        <span class="rp-profile-badge ${statusClass}">${profile.status || ''}</span>
+      `;
+    }
+  }
+
+  function updateStatusBar(text, active) {
+    const bar = document.getElementById('rp-status-bar');
+    const statusText = document.getElementById('rp-status-text');
+    if (bar) {
+      bar.className = active ? 'rp-status-bar active' : 'rp-status-bar';
+    }
+    if (statusText) statusText.textContent = text;
   }
 
   // ==================== CONVERSATION ====================
@@ -408,39 +430,40 @@
   }
 
   function renderConversationMessage(msg) {
-    const empty = dom.conversationThread.querySelector('.conversation-empty');
+    const empty = dom.conversationThread.querySelector('.rp-empty');
     if (empty) empty.remove();
 
     const div = document.createElement('div');
-    const channelIcons = { rcs: '&#128172;', sms: '&#128172;', email: '&#9993;', voice: '&#128222;' };
+    div.className = 'rp-event-row';
 
-    if (msg.direction === 'system') {
-      div.className = 'msg-bubble msg-system';
-      div.innerHTML = `
-        <span class="msg-channel-icon">${channelIcons[msg.channel] || ''}</span>
-        <span>${msg.body}</span>
-        <span class="msg-time">${new Date(msg.timestamp).toLocaleTimeString()}</span>
-      `;
-    } else {
-      div.className = `msg-bubble msg-${msg.direction}`;
-      div.innerHTML = `
-        <div class="msg-body">${msg.body}</div>
-        <div class="msg-meta">
-          <span class="msg-channel-icon">${channelIcons[msg.channel] || ''}</span>
-          <span class="msg-time">${new Date(msg.timestamp).toLocaleTimeString()}</span>
-        </div>
-      `;
-    }
+    const channelLabels = { rcs: 'RCS', sms: 'SMS', email: 'Email', voice: 'Voice' };
+    const dotColors = { rcs: 'dot-green', sms: 'dot-green', email: 'dot-blue', voice: 'dot-amber' };
+    const dotClass = dotColors[msg.channel] || '';
+    const channelLabel = channelLabels[msg.channel] || '';
+    const timeStr = new Date(msg.timestamp).toLocaleTimeString();
+    const dirLabel = msg.direction === 'inbound' ? 'Received' : msg.direction === 'system' ? 'System' : 'Sent';
+
+    div.innerHTML = `
+      <div class="rp-event-dot ${dotClass}"></div>
+      <div class="rp-event-content">
+        <div class="rp-event-name">${dirLabel}: ${channelLabel}</div>
+        <div class="rp-event-detail">${msg.body}</div>
+      </div>
+      <div class="rp-event-timestamp">${timeStr}</div>
+    `;
 
     dom.conversationThread.appendChild(div);
     dom.conversationThread.scrollTop = dom.conversationThread.scrollHeight;
+
+    // Update status bar
+    updateStatusBar(`${dirLabel} ${channelLabel} message`, true);
   }
 
   function renderConversationForProfile(profileId) {
     dom.conversationThread.innerHTML = '';
     const messages = state.conversations[profileId] || [];
     if (messages.length === 0) {
-      dom.conversationThread.innerHTML = '<div class="conversation-empty">No messages yet. Send outreach to begin.</div>';
+      dom.conversationThread.innerHTML = '<div class="rp-empty">No activity yet. Run a scenario to see outreach events.</div>';
       return;
     }
     messages.forEach(msg => renderConversationMessage(msg));
@@ -489,9 +512,10 @@
 
       // Clear UI
       dom.eventList.innerHTML = '';
-      dom.conversationThread.innerHTML = '<div class="conversation-empty">No messages yet. Send outreach to begin.</div>';
+      dom.conversationThread.innerHTML = '<div class="rp-empty">Select a profile and run a scenario to see activity.</div>';
       setOutreachEnabled(false);
       updateRightPanelHeader(null);
+      updateStatusBar('Ready', false);
     });
 
     dom.btnRcs.addEventListener('click', () => showTemplateSelector('rcs'));
@@ -697,20 +721,18 @@
   }
 
   function renderWizardHeader(title, steps, currentStep) {
-    const progressPct = Math.round(((currentStep - 1) / (steps.length - 1)) * 100);
     return `
       <div class="wizard-header">
-        <h2>${title}</h2>
+        <h2 class="wizard-title">${title}</h2>
         <div class="wizard-steps">
           ${steps.map((label, i) => {
             const stepNum = i + 1;
             let cls = 'wizard-step';
             if (stepNum < currentStep) cls += ' completed';
             else if (stepNum === currentStep) cls += ' active';
-            return `<div class="${cls}"><span class="wizard-step-number">${stepNum}</span><span class="wizard-step-label">${label}</span></div>`;
+            return `<div class="${cls}"><span class="wizard-step-number">${stepNum}</span> ${label}</div>`;
           }).join('')}
         </div>
-        <div class="wizard-progress"><div class="wizard-progress-bar" style="width:${progressPct}%"></div></div>
       </div>`;
   }
 
@@ -746,20 +768,31 @@
         <div class="wizard-content-centered">
           <h3 class="wizard-section-title">Select Audience Type</h3>
           <div class="wizard-type-cards">
-            <div class="type-card type-card-selected" data-type="profiles">
-              <div class="type-card-icon">&#128100;</div>
-              <div class="type-card-title">Profiles</div>
-              <div class="type-card-desc">Build an audience from profile traits and conditions</div>
+            <div class="type-card selected" data-type="profiles">
+              <div class="type-card-radio"><div class="type-card-radio-dot"></div></div>
+              <svg class="type-card-icon-svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6c5ce7" stroke-width="1.5"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><circle cx="18" cy="9" r="2.5"/><path d="M21 21v-1.5a3 3 0 00-3-3h-.5"/></svg>
+              <div class="type-card-content">
+                <div class="type-card-title">Profiles audience</div>
+                <div class="type-card-desc">Use profile traits or events to define the audience. This is recommended for use cases that require real-time data.</div>
+              </div>
             </div>
-            <div class="type-card type-card-dimmed" data-type="computed">
-              <div class="type-card-icon">&#9881;</div>
-              <div class="type-card-title">Computed Traits</div>
-              <div class="type-card-desc">Create audiences from computed trait values</div>
+            <div class="type-card dimmed" data-type="product">
+              <div class="type-card-radio"><div class="type-card-radio-dot"></div></div>
+              <svg class="type-card-icon-svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6c5ce7" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><circle cx="5" cy="6" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="19" cy="18" r="2"/><path d="M9.5 10L6.5 7.5M14.5 10l3-2.5M9.5 14l-3 2.5M14.5 14l3 2.5"/></svg>
+              <div class="type-card-content">
+                <div class="type-card-title">Product Based audience</div>
+                <div class="type-card-desc">Use AI/ML to find all the people that are most likely to buy a product from your catalog.</div>
+                <div class="type-card-link">Create recommendation catalog &rarr;</div>
+              </div>
             </div>
-            <div class="type-card type-card-dimmed" data-type="sql">
-              <div class="type-card-icon">&#128451;</div>
-              <div class="type-card-title">SQL</div>
-              <div class="type-card-desc">Write a custom SQL query to define membership</div>
+            <div class="type-card dimmed" data-type="linked">
+              <div class="type-card-radio"><div class="type-card-radio-dot"></div></div>
+              <svg class="type-card-icon-svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6c5ce7" stroke-width="1.5"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+              <div class="type-card-content">
+                <div class="type-card-title">Linked audience</div>
+                <div class="type-card-desc">Use profile traits or relational warehouse data to define the audience.</div>
+                <div class="type-card-link">Set up Data Graph with profile in Unify &rarr;</div>
+              </div>
             </div>
           </div>
         </div>`;
@@ -769,31 +802,31 @@
       const cond = state.wizardConditions[0] || {};
       content = `
         <div class="wizard-content-split">
-          <div class="wizard-content-left">
+          <div class="wizard-content-left" style="flex:1;">
             <h3 class="wizard-section-title">Configure and Preview Your Audience</h3>
             <div class="condition-builder">
               <div class="condition-row">
-                <div class="wizard-form-group">
+                <div class="wizard-form-group" style="flex:1;">
                   <label>Trait</label>
                   <select id="cond-trait" class="wizard-select">
                     <option value="">Select trait...</option>
                     ${traitKeys.map(k => `<option value="${k}"${cond.trait === k ? ' selected' : ''}>${k}</option>`).join('')}
                   </select>
                 </div>
-                <div class="wizard-form-group">
+                <div class="wizard-form-group" style="flex:1;">
                   <label>Operator</label>
                   <select id="cond-operator" class="wizard-select">
                     ${operators.map(op => `<option value="${op}"${cond.operator === op ? ' selected' : ''}>${op}</option>`).join('')}
                   </select>
                 </div>
-                <div class="wizard-form-group">
+                <div class="wizard-form-group" style="width:100px;">
                   <label>Value</label>
                   <input id="cond-value" type="number" class="wizard-input" placeholder="Enter value" value="${cond.value || ''}">
                 </div>
               </div>
             </div>
           </div>
-          <div class="wizard-content-right">
+          <div class="wizard-content-right" style="flex:1;">
             <h3 class="wizard-section-title">Audience Preview</h3>
             <div class="audience-preview" id="audience-preview-panel">
               <div class="audience-preview-empty">Configure a condition to see matching profiles.</div>
@@ -805,10 +838,13 @@
         <div class="wizard-content-centered">
           <h3 class="wizard-section-title">Select Destinations</h3>
           <div class="wizard-type-cards">
-            <div class="type-card type-card-selected">
-              <div class="type-card-icon">&#128640;</div>
-              <div class="type-card-title">Send Interaction</div>
-              <div class="type-card-desc">PH Demo Space</div>
+            <div class="type-card selected">
+              <div class="type-card-radio"><div class="type-card-radio-dot"></div></div>
+              <svg class="type-card-icon-svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6c5ce7" stroke-width="1.5"><path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4z"/></svg>
+              <div class="type-card-content">
+                <div class="type-card-title">Send Interaction</div>
+                <div class="type-card-desc">PH Demo Space</div>
+              </div>
             </div>
           </div>
         </div>`;
@@ -818,7 +854,7 @@
       const autoKey = 'aud_' + Date.now().toString(36);
       content = `
         <div class="wizard-content-split">
-          <div class="wizard-content-left">
+          <div class="wizard-content-left" style="flex:0 0 280px;">
             <h3 class="wizard-section-title">Review and Create</h3>
             <div class="wizard-form-group">
               <label>Audience Name</label>
@@ -833,13 +869,13 @@
               <textarea class="wizard-textarea" data-field="audience-description" placeholder="Describe this audience..." rows="3"></textarea>
             </div>
           </div>
-          <div class="wizard-content-right">
+          <div class="wizard-content-right" style="flex:1;">
             <h3 class="wizard-section-title">Summary</h3>
             <div class="wizard-summary">
-              <div class="wizard-summary-row"><span>Audience Size</span><strong>${members.length} profile${members.length !== 1 ? 's' : ''}</strong></div>
-              <div class="wizard-summary-row"><span>Condition</span><strong>${cond.trait || '—'} ${cond.operator || ''} ${cond.value || ''}</strong></div>
-              <div class="wizard-summary-row"><span>Members</span><strong>${members.map(m => m.name).join(', ') || '—'}</strong></div>
-              <div class="wizard-summary-row"><span>Destinations</span><strong>Send Interaction (PH Demo Space)</strong></div>
+              <div class="wizard-summary-row"><span class="wizard-summary-label">Audience Size</span><span class="wizard-summary-value">${members.length} profile${members.length !== 1 ? 's' : ''}</span></div>
+              <div class="wizard-summary-row"><span class="wizard-summary-label">Condition</span><span class="wizard-summary-value">${cond.trait || '—'} ${cond.operator || ''} ${cond.value || ''}</span></div>
+              <div class="wizard-summary-row"><span class="wizard-summary-label">Members</span><span class="wizard-summary-value">${members.map(m => m.name).join(', ') || '—'}</span></div>
+              <div class="wizard-summary-row"><span class="wizard-summary-label">Destinations</span><span class="wizard-summary-value">Send Interaction (PH Demo Space)</span></div>
             </div>
           </div>
         </div>`;
@@ -1029,7 +1065,7 @@
       <h3 style="margin:28px 0 12px;font-size:16px;font-weight:600;">Destinations</h3>
       <p style="color:#8a8f98;font-size:13px;margin-bottom:12px;">This audience is synced to 1 destination</p>
       <div class="destination-card">
-        <div class="destination-icon">&#128640;</div>
+        <div class="destination-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6c5ce7" stroke-width="1.5"><path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4z"/></svg></div>
         <div>
           <div style="font-weight:600;">Send Interaction</div>
           <div style="font-size:12px;color:#8a8f98;">PH Demo Space</div>
@@ -1210,55 +1246,32 @@
       container.innerHTML = '<div class="profile-events-list" id="profile-events-list"></div>';
       const list = document.getElementById('profile-events-list');
 
-      // Check if this profile has demo events for the current step
+      // Each profile maps to one or more step scenarios (independent of demoStep)
       const stepConfig = {
-        'usr_001': { 1: 'step1', 3: 'step3' },
-        'cust_001': { 2: 'step2' }
+        'usr_001': [1, 3],
+        'cust_001': [2]
       };
 
-      const profileSteps = stepConfig[profile.id];
-      if (!profileSteps) return;
+      const profileStepNumbers = stepConfig[profile.id];
+      if (!profileStepNumbers) return;
 
-      const scenarioKey = profileSteps[state.demoStep];
-      if (!scenarioKey) {
-        // No events for this step, but show any previously stored events statically
-        const existingEvents = state.profileEvents[profile.id] || [];
-        existingEvents.forEach(evt => {
-          const row = document.createElement('div');
-          row.className = 'profile-event-row';
-          const isWarning = evt.type === 'form_abandon' || evt.type === 'session_end';
-          row.innerHTML = `<span class="profile-event-dot${isWarning ? ' dot-warning' : ''}"></span><span class="profile-event-name">${evt.label || evt.type}</span><span class="profile-event-time">Just now</span>`;
-          list.prepend(row);
-        });
-        return;
-      }
+      // Find the first unplayed step for this profile
+      const nextStep = profileStepNumbers.find(s => !state.stepsPlayed.has(s));
 
-      const stepNumber = state.demoStep;
-
-      // If already played, show events statically
-      if (state.stepsPlayed.has(stepNumber)) {
-        const events = state.profileEvents[profile.id] || [];
-        events.forEach(evt => {
-          const row = document.createElement('div');
-          row.className = 'profile-event-row';
-          const isWarning = evt.type === 'form_abandon' || evt.type === 'session_end';
-          row.innerHTML = `<span class="profile-event-dot${isWarning ? ' dot-warning' : ''}"></span><span class="profile-event-name">${evt.label || evt.type}</span><span class="profile-event-time">Just now</span>`;
-          list.prepend(row);
-        });
-        return;
-      }
-
-      // Show any previously stored events for this profile (e.g., Step 1 events when Step 3 starts)
+      // Show any previously stored events for this profile
       const existingEvents = state.profileEvents[profile.id] || [];
       existingEvents.forEach(evt => {
         const row = document.createElement('div');
         row.className = 'profile-event-row';
-        const isWarning = evt.type === 'form_abandon' || evt.type === 'session_end';
-        row.innerHTML = `<span class="profile-event-dot${isWarning ? ' dot-warning' : ''}"></span><span class="profile-event-name">${evt.label || evt.type}</span><span class="profile-event-time">Just now</span>`;
+        const dotClass = getEventIcon(evt.type);
+        row.innerHTML = `<span class="profile-event-dot ${dotClass}"></span><span class="profile-event-name">${evt.label || evt.type}</span><span class="profile-event-time">Just now</span>`;
         list.prepend(row);
       });
 
-      // Play this step's events
+      // If all steps played or no next step, just show existing events
+      if (!nextStep) return;
+
+      const stepNumber = nextStep;
       const scenario = STEP_SCENARIOS[stepNumber];
       if (!scenario || !scenario.events) return;
 
@@ -1270,7 +1283,8 @@
           const row = document.createElement('div');
           row.className = 'profile-event-row entering';
           const isWarning = evt.type === 'form_abandon' || evt.type === 'session_end';
-          row.innerHTML = `<span class="profile-event-dot${isWarning ? ' dot-warning' : ''}"></span><span class="profile-event-name">${evt.label || evt.type}</span><span class="profile-event-time">Just now</span>`;
+          const dotClass = getEventIcon(evt.type);
+          row.innerHTML = `<span class="profile-event-dot ${dotClass}"></span><span class="profile-event-name">${evt.label || evt.type}</span><span class="profile-event-time">Just now</span>`;
           list.prepend(row);
           setTimeout(() => row.classList.remove('entering'), 350);
 
@@ -1328,30 +1342,45 @@
           first_name: profile.name.split(' ')[0]
         }, 'Cross Sell Promotion');
         state.lastOutboundProfileId = profile.id;
-      } else {
-        console.warn('PROMO_EMAIL_TEMPLATE_ID not configured, skipping email send');
       }
     }
 
+    // Step 1: RCS escalation (agent didn't engage with email)
+    if (stepNumber === 1 && evt.type === 'rcs_sent') {
+      const contentSid = CONFIG.promoContentSid;
+      if (contentSid) {
+        sendRcs(contentSid, { '1': profile.name }, 'rcs_sfbli_product_promotion');
+        state.lastOutboundProfileId = profile.id;
+      }
+    }
+
+    // Step 2: Journey RCS to Marco Santos
+    if (stepNumber === 2 && evt.type === 'rcs_sent') {
+      const contentSid = CONFIG.journeyRcsContentSid;
+      if (contentSid) {
+        const marcoProfile = MOCK_PROFILES.find(p => p.id === 'cust_001');
+        sendRcs(contentSid, { '1': marcoProfile.name }, 'rcs_sfbli_property_and_casualty');
+        state.lastOutboundProfileId = 'cust_001';
+      }
+    }
+
+    // Step 3: Policy change email
     if (stepNumber === 3 && evt.type === 'email_sent') {
       const templateId = CONFIG.policyChangeEmailTemplateId;
       if (templateId) {
         sendEmail(templateId, {
           first_name: profile.name.split(' ')[0]
-        }, 'Policy Class Change Notification');
+        }, 'sfbli-policy-change');
         state.lastOutboundProfileId = profile.id;
-      } else {
-        console.warn('POLICY_CHANGE_EMAIL_TEMPLATE_ID not configured, skipping email send');
       }
     }
 
-    if (stepNumber === 3 && evt.type === 'session_end') {
-      const contentSid = CONFIG.promoContentSid;
+    // Step 3: Policy change RCS escalation
+    if (stepNumber === 3 && evt.type === 'rcs_sent') {
+      const contentSid = CONFIG.policyChangeRcsContentSid;
       if (contentSid) {
-        sendRcs(contentSid, { '1': profile.name }, 'Promotional Outreach');
+        sendRcs(contentSid, { '1': profile.name }, 'policy_change_escalation');
         state.lastOutboundProfileId = profile.id;
-      } else {
-        console.warn('PROMO_CONTENT_SID not configured, skipping RCS send');
       }
     }
   }
@@ -1359,21 +1388,12 @@
   function handleStepComplete(profile, stepNumber) {
     if (stepNumber === 1) {
       setOutreachEnabled(true);
+      advanceDemoStep(2);
     }
 
     if (stepNumber === 2) {
-      const contentSid = CONFIG.journeyRcsContentSid;
-      if (contentSid) {
-        const marcoProfile = MOCK_PROFILES.find(p => p.id === 'cust_001');
-        sendRcs(contentSid, { '1': marcoProfile.name }, 'Journey Promotion').then(() => {
-          state.lastOutboundProfileId = 'cust_001';
-          advanceDemoStep(3);
-        });
-      } else {
-        console.warn('JOURNEY_RCS_CONTENT_SID not configured, skipping RCS send');
-        advanceDemoStep(3);
-      }
       setOutreachEnabled(true);
+      advanceDemoStep(3);
     }
 
     if (stepNumber === 3) {
@@ -1391,9 +1411,7 @@
   }
 
   function checkStepTransitionOnOutreach() {
-    if (state.demoStep === 1) {
-      advanceDemoStep(2);
-    }
+    // Step transitions are now handled by handleStepComplete only
     state.lastOutboundProfileId = state.activeProfileId;
   }
 
@@ -1412,14 +1430,14 @@
           <div style="flex:1;">
             <h3 class="wizard-section-title">Select a Trigger</h3>
             <div class="trigger-option dimmed">
-              <span>&#9881;</span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
               <div>
                 <div style="font-weight:600;font-size:14px;">Profile performs an event</div>
                 <div style="font-size:12px;color:#6b7280;">Trigger when a profile performs a specific event</div>
               </div>
             </div>
             <div class="trigger-option selected">
-              <span>&#128100;</span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
               <div>
                 <div style="font-weight:600;font-size:14px;">Profile enters an audience</div>
                 <div style="font-size:12px;color:#6b7280;">Trigger when a profile enters a specific audience</div>
@@ -1478,12 +1496,12 @@
         <div class="journey-canvas-layout">
           <div class="journey-widget-panel">
             <div class="widget-section-label">Flow Control</div>
-            <div class="widget-item">&#9202; Delay</div>
-            <div class="widget-item">&#9208; Hold until</div>
-            <div class="widget-item">&#128256; Data split</div>
-            <div class="widget-item">&#127922; Randomized split</div>
+            <div class="widget-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Delay</div>
+            <div class="widget-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> Hold until</div>
+            <div class="widget-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg> Data split</div>
+            <div class="widget-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg> Randomized split</div>
             <div class="widget-section-label">Actions</div>
-            <div class="widget-item">&#128640; Send to destination</div>
+            <div class="widget-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4z"/></svg> Send to destination</div>
           </div>
           <div class="journey-canvas">
             <div class="canvas-node canvas-node-trigger">
@@ -1603,7 +1621,7 @@
 
     if (state.journeys.length === 0) {
       tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#8a8f98;padding:40px 0;">
-        <div class="empty-state-icon">&#128736;</div>
+        <div class="empty-state-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg></div>
         <div class="empty-state-title">No journeys yet</div>
         <div class="empty-state-text">Create your first journey to start engaging profiles across channels.</div>
         <button class="btn btn-primary btn-sm btn-new-journey-inline">+ Create journey</button>
@@ -1639,6 +1657,7 @@
       CONFIG.promoContentSid = configData.promoContentSid || '';
       CONFIG.journeyRcsContentSid = configData.journeyRcsContentSid || '';
       CONFIG.policyChangeEmailTemplateId = configData.policyChangeEmailTemplateId || '';
+      CONFIG.policyChangeRcsContentSid = configData.policyChangeRcsContentSid || '';
       CONFIG.promoEmailTemplateId = configData.promoEmailTemplateId || '';
       CONFIG.configLoaded = true;
     } catch (e) {
@@ -1678,7 +1697,7 @@
   }
 
   // ==================== EXPOSE FOR TASK 9 ====================
-  window.__app = { CONFIG, state, dom, updateProfileField, switchView, openAudienceWizard, closeAudienceWizard, computeAudienceMembers, createAudience, renderAudienceDetail, renderAudiencesList, showAudienceDetail, openJourneyWizard, closeJourneyWizard, createJourney };
+  window.__app = { CONFIG, state, dom, updateProfileField, switchView, openAudienceWizard, closeAudienceWizard, computeAudienceMembers, createAudience, renderAudienceDetail, renderAudiencesList, showAudienceDetail, openJourneyWizard, closeJourneyWizard, createJourney, updateStatusBar };
 
   // Start the app
   init();

@@ -1,8 +1,9 @@
 {
   "name": "Journey Promotion",
-  "description": "Marco Santos journey triggers promotional outreach",
+  "description": "Marco Santos journey triggers property & casualty RCS",
   "profileId": "cust_001",
   "events": [
-    { "type": "promotion_sent", "delay": 0, "label": "Journey Triggered: Property & Casualty Promotion" }
+    { "type": "promotion_sent", "delay": 0, "label": "Journey Triggered: Property & Casualty Promotion" },
+    { "type": "rcs_sent", "delay": 2000, "label": "RCS Sent: rcs_sfbli_property_and_casualty" }
   ]
 }

@@ -1,8 +1,9 @@
 {
   "name": "Cross-Sell Promotion",
-  "description": "Paul Heath receives cross-sell promotion email",
+  "description": "Paul Heath receives cross-sell email, no engagement triggers RCS escalation",
   "profileId": "usr_001",
   "events": [
-    { "type": "email_delivered", "delay": 0, "label": "Email Delivered: Cross Sell Promotion" }
+    { "type": "email_delivered", "delay": 0, "label": "Email Delivered: Cross Sell Promotion" },
+    { "type": "rcs_sent", "delay": 4000, "label": "RCS Sent: rcs_sfbli_product_promotion" }
   ]
 }

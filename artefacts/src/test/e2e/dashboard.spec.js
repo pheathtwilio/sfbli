@@ -23,18 +23,19 @@ test.describe('Dashboard Layout', () => {
   });
 });
 
-test.describe('Outreach Controls', () => {
-  test('outreach buttons are disabled on load', async ({ page }) => {
+test.describe('Right Panel Dark Theme', () => {
+  test('right panel has dark theme styling', async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('#btn-rcs')).toBeDisabled();
-    await expect(page.locator('#btn-email')).toBeDisabled();
-    await expect(page.locator('#btn-voice')).toBeDisabled();
+    await expect(page.locator('.right-panel-dark')).toBeVisible();
+    await expect(page.locator('.rp-profile-header')).toBeVisible();
+    await expect(page.locator('.rp-activity-stream')).toBeVisible();
+    await expect(page.locator('.rp-status-bar')).toBeVisible();
   });
 
-  test('conversation input is disabled on load', async ({ page }) => {
+  test('right panel shows default state on load', async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('#conversation-input')).toBeDisabled();
-    await expect(page.locator('#conversation-send-btn')).toBeDisabled();
+    await expect(page.locator('.rp-profile-name')).toContainText('No profile selected');
+    await expect(page.locator('.rp-empty')).toBeVisible();
   });
 });
 
@@ -62,49 +63,62 @@ test.describe('Profile Explorer', () => {
     await expect(page.locator('.profile-tab')).toHaveCount(5);
   });
 
-  test('events tab animates live events and enables outreach', async ({ page }) => {
+  test('selecting profile updates right panel header', async ({ page }) => {
     await page.goto('/');
     await page.waitForSelector('#view-sources', { state: 'visible' });
     await page.evaluate(() => window.__app.switchView('profile-explorer'));
     await page.waitForFunction(() => document.querySelectorAll('#profile-table-body tr').length === 16);
     await page.evaluate(() => document.querySelector('#profile-table-body tr:first-child').click());
     await page.waitForFunction(() => !document.getElementById('profile-detail').classList.contains('hidden'));
-    await page.evaluate(() => document.querySelector('.profile-tab[data-tab="events"]').click());
-
-    // Historical events appear immediately
-    await expect(page.locator('.profile-event-row')).toHaveCount(4, { timeout: 1000 });
-
-    // Live events animate in
-    await expect(page.locator('.profile-event-row')).toHaveCount(5, { timeout: 3000 });
-    await expect(page.locator('.profile-event-row')).toHaveCount(6, { timeout: 5000 });
-    await expect(page.locator('.profile-event-row')).toHaveCount(7, { timeout: 8000 });
-
-    // form_abandon should enable outreach
-    await expect(page.locator('#btn-rcs')).toBeEnabled();
-    await expect(page.locator('#btn-email')).toBeEnabled();
-    await expect(page.locator('#btn-voice')).toBeEnabled();
-    await expect(page.locator('#conversation-input')).toBeEnabled();
+    await expect(page.locator('.rp-profile-name')).toContainText('Paul Heath');
+    await expect(page.locator('.rp-profile-badges')).toContainText('Agent');
   });
 });
 
-test.describe('Conversation Input', () => {
-  test('conversation input accepts text when enabled', async ({ page }) => {
+test.describe('Demo Flow - Step 1 (Paul Heath)', () => {
+  test('events tab shows only email and RCS events for step 1', async ({ page }) => {
     await page.goto('/');
     await page.waitForSelector('#view-sources', { state: 'visible' });
-
-    // Enable outreach directly
     await page.evaluate(() => window.__app.switchView('profile-explorer'));
     await page.waitForFunction(() => document.querySelectorAll('#profile-table-body tr').length === 16);
     await page.evaluate(() => document.querySelector('#profile-table-body tr:first-child').click());
     await page.waitForFunction(() => !document.getElementById('profile-detail').classList.contains('hidden'));
     await page.evaluate(() => document.querySelector('.profile-tab[data-tab="events"]').click());
 
-    // Wait for form_abandon to enable
-    await expect(page.locator('#conversation-input')).toBeEnabled({ timeout: 8000 });
+    // First event appears immediately (email)
+    await expect(page.locator('.profile-event-row')).toHaveCount(1, { timeout: 2000 });
+    await expect(page.locator('.profile-event-row').first()).toContainText('Email Delivered: Cross Sell Promotion');
 
-    // Type into the input
-    await page.fill('#conversation-input', 'Hello from the demo');
-    await expect(page.locator('#conversation-input')).toHaveValue('Hello from the demo');
+    // Second event (RCS escalation) appears after 4s delay
+    await expect(page.locator('.profile-event-row')).toHaveCount(2, { timeout: 6000 });
+    await expect(page.locator('.profile-event-row').first()).toContainText('RCS Sent: rcs_sfbli_product_promotion');
+
+    // Verify demo advances to step 2
+    await page.waitForFunction(() => window.__app.state.demoStep === 2, { timeout: 8000 });
+  });
+});
+
+test.describe('Demo Flow - Step 2 (Marco Santos)', () => {
+  test('Marco Santos events fire independently', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForSelector('#view-sources', { state: 'visible' });
+
+    // Navigate directly to Marco Santos (no need to play step 1 first)
+    await page.evaluate(() => window.__app.switchView('profile-explorer'));
+    await page.waitForFunction(() => document.querySelectorAll('#profile-table-body tr').length === 16);
+    await page.evaluate(() => {
+      const rows = document.querySelectorAll('#profile-table-body tr');
+      for (const row of rows) {
+        if (row.textContent.includes('Marco Santos')) { row.click(); break; }
+      }
+    });
+    await page.waitForFunction(() => !document.getElementById('profile-detail').classList.contains('hidden'));
+    await page.evaluate(() => document.querySelector('.profile-tab[data-tab="events"]').click());
+
+    // Marco should get 2 events: journey triggered + RCS sent
+    await expect(page.locator('.profile-event-row')).toHaveCount(2, { timeout: 5000 });
+    await expect(page.locator('.profile-event-row').last()).toContainText('Journey Triggered');
+    await expect(page.locator('.profile-event-row').first()).toContainText('RCS Sent: rcs_sfbli_property_and_casualty');
   });
 });
 
@@ -127,12 +141,31 @@ test.describe('Audiences', () => {
     await expect(page.locator('#audience-wizard')).toBeVisible();
   });
 
-  test('completing wizard creates audience in list', async ({ page }) => {
+  test('wizard step 1 uses radio cards without emojis', async ({ page }) => {
+    await page.goto('/');
+    await page.evaluate(() => window.__app.switchView('audiences'));
+    await page.evaluate(() => window.__app.openAudienceWizard());
+    await page.waitForFunction(() =>
+      !document.getElementById('audience-wizard').classList.contains('hidden'));
+
+    // Verify radio card structure
+    await expect(page.locator('.type-card')).toHaveCount(3);
+    await expect(page.locator('.type-card.selected')).toHaveCount(1);
+    await expect(page.locator('.type-card-radio')).toHaveCount(3);
+    await expect(page.locator('.type-card-icon-svg')).toHaveCount(3);
+
+    // Verify labels
+    await expect(page.locator('.type-card.selected')).toContainText('Profiles audience');
+    await expect(page.locator('.type-card.dimmed').first()).toContainText('Product Based audience');
+    await expect(page.locator('.type-card.dimmed').last()).toContainText('Linked audience');
+  });
+
+  test('completing wizard creates audience', async ({ page }) => {
     await page.goto('/');
     await page.evaluate(() => window.__app.switchView('audiences'));
     await page.evaluate(() => window.__app.openAudienceWizard());
 
-    // Step 1: Select type (Profiles pre-selected) → Next
+    // Step 1: Next
     await page.evaluate(() =>
       document.getElementById('wizard-next-btn').click());
 
@@ -153,7 +186,7 @@ test.describe('Audiences', () => {
     await page.evaluate(() =>
       document.getElementById('wizard-next-btn').click());
 
-    // Step 3: Destinations → Next
+    // Step 3: Destinations -> Next
     await page.evaluate(() =>
       document.getElementById('wizard-next-btn').click());
 
@@ -170,10 +203,13 @@ test.describe('Audiences', () => {
 });
 
 test.describe('Journeys', () => {
-  test('journeys list shows empty state', async ({ page }) => {
+  test('journeys list shows empty state without emojis', async ({ page }) => {
     await page.goto('/');
     await page.evaluate(() => window.__app.switchView('journeys'));
     await expect(page.locator('#journeys-table-body')).toContainText('No journeys yet');
+    // Verify no emoji content (wrench emoji &#128736;)
+    const emptyIconHtml = await page.locator('.empty-state-icon').innerHTML();
+    expect(emptyIconHtml).toContain('svg');
   });
 
   test('create journey button opens wizard', async ({ page }) => {
@@ -188,78 +224,7 @@ test.describe('Journeys', () => {
   });
 });
 
-test.describe('End-to-End Scenario', () => {
-  test('audience + journey triggers promotion_sent on qualifying profile', async ({ page }) => {
-    await page.goto('/');
-
-    // Create audience and journey via JS API
-    await page.evaluate(() => {
-      const members = window.__app.computeAudienceMembers([
-        { trait: 'target_attainment', operator: 'greater than', value: 60 }
-      ]);
-      window.__app.state.audiences.push({
-        name: 'Cross-Sell', key: 'cross_sell',
-        description: 'Test', conditions: [],
-        destination: 'Send Interaction',
-        members: members.map(p => p.id)
-      });
-      window.__app.state.journeys.push({
-        name: 'Send Promotion', description: 'Test',
-        audience_key: 'cross_sell',
-        trigger: 'new_promotion_published',
-        destination: 'Send Interaction', status: 'Draft'
-      });
-    });
-
-    // Navigate to Paul Heath profile events tab
-    await page.evaluate(() => window.__app.switchView('profile-explorer'));
-    await page.waitForFunction(() =>
-      document.querySelectorAll('#profile-table-body tr').length === 16);
-    await page.evaluate(() =>
-      document.querySelector('#profile-table-body tr:first-child').click());
-    await page.waitForFunction(() =>
-      !document.getElementById('profile-detail').classList.contains('hidden'));
-    await page.evaluate(() =>
-      document.querySelector('.profile-tab[data-tab="events"]').click());
-
-    // Wait for promotion_sent event (8s delay + buffer)
-    // 4 history + 3 live + 1 promotion_sent = 8
-    await expect(page.locator('.profile-event-row')).toHaveCount(8, { timeout: 12000 });
-  });
-
-  test('non-qualifying profile does not get promotion_sent', async ({ page }) => {
-    await page.goto('/');
-
-    // Create audience — Emily Watson (13%) won't qualify
-    await page.evaluate(() => {
-      window.__app.state.audiences.push({
-        name: 'Test', key: 'test', description: '',
-        conditions: [], destination: 'Send Interaction',
-        members: ['usr_001', 'usr_002', 'usr_003', 'usr_005']
-      });
-      window.__app.state.journeys.push({
-        name: 'Test Journey', description: '',
-        audience_key: 'test', trigger: 'new_promotion_published',
-        destination: 'Send Interaction', status: 'Draft'
-      });
-    });
-
-    // Navigate to Emily Watson (usr_004, row index 3)
-    await page.evaluate(() => window.__app.switchView('profile-explorer'));
-    await page.waitForFunction(() =>
-      document.querySelectorAll('#profile-table-body tr').length === 16);
-    await page.evaluate(() =>
-      document.querySelectorAll('#profile-table-body tr')[3].click());
-    await page.waitForFunction(() =>
-      !document.getElementById('profile-detail').classList.contains('hidden'));
-    await page.evaluate(() =>
-      document.querySelector('.profile-tab[data-tab="events"]').click());
-
-    // Wait for all live events, then verify no promotion_sent
-    // 4 history + 3 live = 7, no promotion_sent
-    await expect(page.locator('.profile-event-row')).toHaveCount(7, { timeout: 10000 });
-  });
-
+test.describe('Page Refresh', () => {
   test('page refresh resets to only default audience', async ({ page }) => {
     await page.goto('/');
     await page.evaluate(() => {
@@ -271,7 +236,6 @@ test.describe('End-to-End Scenario', () => {
     await page.reload();
     await page.waitForFunction(() => window.__app && window.__app.state.audiences.length > 0);
     await page.evaluate(() => window.__app.switchView('audiences'));
-    // Default audience persists but custom one is gone
     await expect(page.locator('#audiences-table-body')).toContainText('Property & Casualty Promotion');
     await expect(page.locator('#audiences-table-body')).not.toContainText('Custom Test');
   });
