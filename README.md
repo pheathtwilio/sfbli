@@ -1,4 +1,4 @@
-# SFBLI - San Francisco Bay Life Insurance Demo
+# SFBLI - Southern Farm Life Insurance Demo
 
 A Twilio demo application showcasing how to build a modern customer experience platform combining CDP (Segment), multi-channel messaging, identity verification, AI agents, and contact center operations — all for a fictional insurance company.
 
