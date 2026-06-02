@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SFBLI Demo Overview</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0a0a0f;
+    color: #e8e8ed;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  .slide {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    height: 100vh;
+    width: 100vw;
+    padding: 60px 80px;
+    position: absolute;
+    top: 0; left: 0;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .slide.active {
+    display: flex;
+    opacity: 1;
+  }
+
+  /* Title slide */
+  .slide-title {
+    background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3e 100%);
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .twilio-logo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 40px;
+  }
+
+  .twilio-wordmark {
+    font-size: 36px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.5px;
+  }
+
+  .slide-title h1 {
+    font-size: 56px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #fff 0%, #a8b4ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .slide-title .subtitle {
+    font-size: 24px;
+    color: #8a8fa8;
+    font-weight: 400;
+  }
+
+  /* Demo slides */
+  .slide-demo {
+    display: none;
+    flex-direction: row;
+    gap: 60px;
+    padding: 50px 70px;
+  }
+
+  .slide-demo.active { display: flex; }
+
+  .slide-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .slide-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .demo-label {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .demo-label.d1 { color: #6c8cff; }
+  .demo-label.d2 { color: #ff8c6c; }
+  .demo-label.d3 { color: #6cffa8; }
+  .demo-label.d4 { color: #c88cff; }
+
+  .slide-demo h2 {
+    font-size: 40px;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.5px;
+    margin-bottom: 28px;
+  }
+
+  .products-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 32px;
+  }
+
+  .product-tag {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #c0c4d0;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .product-tag:hover {
+    background: rgba(255,255,255,0.14);
+    border-color: rgba(255,255,255,0.25);
+    color: #fff;
+  }
+
+  .what-we-show h3, .value-section h3 {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    color: #8a8fa8;
+  }
+
+  .what-we-show ul {
+    list-style: none;
+    margin-bottom: 0;
+  }
+
+  .what-we-show li {
+    font-size: 18px;
+    line-height: 1.5;
+    padding: 6px 0;
+    padding-left: 28px;
+    position: relative;
+    color: #d0d4e0;
+  }
+
+  .what-we-show li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 14px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .d1 .what-we-show li::before { background: #6c8cff; }
+  .d2 .what-we-show li::before { background: #ff8c6c; }
+  .d3 .what-we-show li::before { background: #6cffa8; }
+  .d4 .what-we-show li::before { background: #c88cff; }
+
+  /* Pain / Value cards */
+  .pain-value-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .pv-card {
+    border-radius: 12px;
+    padding: 20px 24px;
+    position: relative;
+  }
+
+  .pv-card.pain {
+    background: rgba(255, 80, 80, 0.06);
+    border: 1px solid rgba(255, 80, 80, 0.18);
+  }
+
+  .pv-card.value {
+    background: rgba(80, 255, 160, 0.06);
+    border: 1px solid rgba(80, 255, 160, 0.18);
+  }
+
+  .pv-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .pv-card.pain .pv-label { color: #ff6b6b; }
+  .pv-card.value .pv-label { color: #6bffa8; }
+
+  .pv-card p {
+    font-size: 16px;
+    line-height: 1.55;
+    color: #c8ccd8;
+  }
+
+  .pv-card .stat {
+    font-weight: 700;
+    color: #fff;
+  }
+
+  /* Closing slide */
+  .slide-closing {
+    background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3e 100%);
+    text-align: center;
+    align-items: center;
+  }
+
+  .slide-closing h2 {
+    font-size: 44px;
+    font-weight: 700;
+    margin-bottom: 40px;
+    background: linear-gradient(135deg, #fff 0%, #a8b4ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .closing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    max-width: 900px;
+  }
+
+  .closing-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 28px 20px;
+    text-align: center;
+  }
+
+  .closing-stat {
+    font-size: 36px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .closing-stat.green { color: #6bffa8; }
+  .closing-stat.blue { color: #6c8cff; }
+  .closing-stat.amber { color: #ffb86c; }
+
+  .closing-desc {
+    font-size: 14px;
+    color: #8a8fa8;
+    line-height: 1.4;
+  }
+
+  /* Navigation */
+  .nav-bar {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 24px;
+    backdrop-filter: blur(12px);
+    z-index: 100;
+  }
+
+  .nav-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .nav-dot.active { background: #6c8cff; transform: scale(1.3); }
+  .nav-dot:hover { background: rgba(255,255,255,0.4); }
+
+  .nav-hint {
+    font-size: 11px;
+    color: rgba(255,255,255,0.3);
+    margin-left: 8px;
+  }
+
+  /* Accent lines */
+  .slide-demo::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 3px;
+  }
+  .d1::before { background: linear-gradient(90deg, #6c8cff, transparent 60%); }
+  .d2::before { background: linear-gradient(90deg, #ff8c6c, transparent 60%); }
+  .d3::before { background: linear-gradient(90deg, #6cffa8, transparent 60%); }
+  .d4::before { background: linear-gradient(90deg, #c88cff, transparent 60%); }
+
+  /* Recap slides */
+  .slide-recap {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    padding: 60px 100px;
+    position: absolute;
+    top: 0; left: 0;
+    height: 100vh;
+    width: 100vw;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .slide-recap.active {
+    display: flex;
+    opacity: 1;
+  }
+
+  .slide-recap::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 3px;
+  }
+
+  .slide-recap.d1::before { background: linear-gradient(90deg, #6c8cff, transparent 60%); }
+  .slide-recap.d2::before { background: linear-gradient(90deg, #ff8c6c, transparent 60%); }
+  .slide-recap.d3::before { background: linear-gradient(90deg, #6cffa8, transparent 60%); }
+  .slide-recap.d4::before { background: linear-gradient(90deg, #c88cff, transparent 60%); }
+
+  .recap-header {
+    margin-bottom: 48px;
+  }
+
+  .recap-header h2 {
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-top: 8px;
+  }
+
+  .recap-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .recap-card {
+    border-radius: 12px;
+    padding: 28px 28px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .recap-card.showed {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .recap-card.matters {
+    border: 1px solid rgba(80, 255, 160, 0.18);
+    background: rgba(80, 255, 160, 0.04);
+  }
+
+  .recap-card-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #8a8fa8;
+  }
+
+  .recap-card.matters .recap-card-label {
+    color: #6bffa8;
+  }
+
+  .recap-card h4 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.3;
+  }
+
+  .recap-card p {
+    font-size: 15px;
+    line-height: 1.55;
+    color: #a0a4b0;
+  }
+
+  .recap-card .highlight {
+    color: #fff;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<!-- Slide 0: Title -->
+<div class="slide slide-title active" data-index="0">
+  <div class="twilio-logo"><svg viewBox="0 0 60 60" width="48" height="48" xmlns="http://www.w3.org/2000/svg"><path d="M30 0C13.43 0 0 13.43 0 30s13.43 30 30 30 30-13.43 30-30S46.57 0 30 0zm0 51.82c-12.03 0-21.82-9.79-21.82-21.82S17.97 8.18 30 8.18 51.82 17.97 51.82 30 42.03 51.82 30 51.82zm11.48-28.3a5.48 5.48 0 1 1-5.48-5.48 5.48 5.48 0 0 1 5.48 5.48zm0 13.96a5.48 5.48 0 1 1-5.48-5.48 5.48 5.48 0 0 1 5.48 5.48zm-13.96 0a5.48 5.48 0 1 1-5.48-5.48 5.48 5.48 0 0 1 5.48 5.48zm0-13.96a5.48 5.48 0 1 1-5.48-5.48 5.48 5.48 0 0 1 5.48 5.48z" fill="#F22F46"/></svg><span class="twilio-wordmark">twilio</span></div>
+  <h1>Transforming Customer &amp; Agent Engagement</h1>
+  <div class="subtitle">Twilio Platform Demo for SFBLI</div>
+</div>
+
+<!-- Slide 1: Demo 1 -->
+<div class="slide slide-demo d1" data-index="1">
+  <div class="slide-left">
+    <div class="demo-label d1">Demo 1</div>
+    <h2>Right Message, Right Channel, Right Time</h2>
+    <div class="products-bar">
+      <a class="product-tag" href="https://segment.com/" target="_blank" title="What is Twilio Segment?">Twilio Segment</a>
+      <a class="product-tag" href="https://www.twilio.com/en-us/products/engage" target="_blank" title="What is Twilio Engage?">Twilio Engage</a>
+      <a class="product-tag" href="https://www.twilio.com/en-us/products/engage/audiences" target="_blank" title="What is Audiences?">Audiences</a>
+      <a class="product-tag" href="https://www.twilio.com/en-us/products/engage/journeys" target="_blank" title="What is Journeys?">Journeys</a>
+    </div>
+    <div class="what-we-show">
+      <h3>What We'll Show</h3>
+      <ul>
+        <li>Build a real-time audience of cross-sell eligible agents based on performance traits</li>
+        <li>Activate a journey that sends promotions via each agent's preferred channel</li>
+        <li>Trigger a customer promotion driven by propensity-to-buy scoring</li>
+        <li>Deliver a live RCS message to a customer on their preferred channel</li>
+      </ul>
+    </div>
+  </div>
+  <div class="slide-right">
+    <div class="pain-value-grid">
+      <div class="pv-card pain">
+        <div class="pv-label">Discovery Pain</div>
+        <p>Mass communications are manual and <span class="stat">"untrackable."</span> No way to know if outreach was effective or if the agent took the desired action. Email open rates are <span class="stat">below 20%</span>.</p>
+      </div>
+      <div class="pv-card pain">
+        <div class="pv-label">Discovery Pain</div>
+        <p>No unified <span class="stat">Customer Profile</span> or personas. Unable to use propensity models to drive cross-sell. Growth is constrained by lack of real-time intelligence.</p>
+      </div>
+      <div class="pv-card value">
+        <div class="pv-label">Twilio Value</div>
+        <p>Every send is <span class="stat">tracked and attributed</span> to a specific agent, audience, and journey. SMS delivers a <span class="stat">98% open rate</span> vs. email's 20%. Preferred channel routing ensures the message is seen.</p>
+      </div>
+      <div class="pv-card value">
+        <div class="pv-label">Twilio Value</div>
+        <p>Segment creates the <span class="stat">Golden Profile</span> for every agent and customer. Propensity scoring identifies who to target. Engage activates on the data instantly &mdash; no procurement cycles.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 2: Recap 1 -->
+<div class="slide slide-recap d1" data-index="2">
+  <div class="recap-header">
+    <div class="demo-label d1">Demo 1 Recap</div>
+    <h2>What You Just Saw &amp; Why It Matters</h2>
+  </div>
+  <div class="recap-grid">
+    <div class="recap-card showed">
+      <div class="recap-card-label">You Saw</div>
+      <h4>Agents grouped by live performance data</h4>
+      <p>The system evaluated every agent's actual attainment numbers and built a qualified audience in seconds &mdash; no spreadsheets, no manual list pulls, no guesswork about who should receive the promotion.</p>
+    </div>
+    <div class="recap-card matters">
+      <div class="recap-card-label">Why It Matters</div>
+      <h4>Your marketing team regains hours and gains proof</h4>
+      <p>Instead of blasting 2,000 agents and hoping for the best, you now <span class="highlight">target the 4 who are ready to act</span>. And when leadership asks "did that campaign work?" &mdash; you have the attribution data to answer.</p>
+    </div>
+    <div class="recap-card showed">
+      <div class="recap-card-label">You Saw</div>
+      <h4>A customer reached on SMS because that's where they engage</h4>
+      <p>Marco's profile determined the channel. The journey executed automatically. A branded RCS message landed on his phone within seconds of activation &mdash; not days later via a batch email nobody opens.</p>
+    </div>
+    <div class="recap-card matters">
+      <div class="recap-card-label">Why It Matters</div>
+      <h4>Cross-sell becomes proactive, not passive</h4>
+      <p>Your strategy team described needing <span class="highlight">propensity-to-buy signals pushed to agents as "Hot Leads."</span> What you saw is that pipeline &mdash; profile data feeding a score, a score triggering a journey, and a journey delivering the right offer on the right channel.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 3: Demo 2 -->
+<div class="slide slide-demo d2" data-index="3">
+  <div class="slide-left">
+    <div class="demo-label d2">Demo 2</div>
+    <h2>Closing the Loop on Policy Changes</h2>
+    <div class="products-bar">
+      <a class="product-tag" href="https://segment.com/" target="_blank" title="What is Twilio Segment?">Twilio Segment</a>
+      <a class="product-tag" href="https://www.twilio.com/en-us/messaging/conversations-api" target="_blank" title="What is Twilio Conversations?">Twilio Conversations</a>
+      <a class="product-tag" href="https://www.twilio.com/en-us/messaging" target="_blank" title="What is SMS / RCS?">SMS / RCS</a>
+      <a class="product-tag" href="https://www.twilio.com/en-us/sendgrid/email-api" target="_blank" title="What is Email?">Email</a>
+      <a class="product-tag" href="https://www.twilio.com/en-us/voice" target="_blank" title="What is Voice?">Voice</a>
+    </div>
+    <div class="what-we-show">
+      <h3>What We'll Show</h3>
+      <ul>
+        <li>Policy class change triggers an instant email to the agent</li>
+        <li>Agent visits the portal, starts a form, and abandons it &mdash; system detects this in real time</li>
+        <li>Escalation to RCS on the agent's preferred channel with a two-way conversation</li>
+        <li>Final escalation: outbound voice call if the agent still hasn't responded</li>
+        <li>Profile updates live &mdash; engagement score drops, status shifts to "At Risk"</li>
+      </ul>
+    </div>
+  </div>
+  <div class="slide-right">
+    <div class="pain-value-grid">
+      <div class="pv-card pain">
+        <div class="pv-label">Discovery Pain</div>
+        <p>Critical underwriting updates sit in the agent portal unnoticed because agents only <span class="stat">log in once a week</span>. "Better class" upsell conversion is stuck at <span class="stat">3%</span>.</p>
+      </div>
+      <div class="pv-card pain">
+        <div class="pv-label">Discovery Pain</div>
+        <p>Underwriters manage <span class="stat">250 cases</span> using "static" chat files. No real-time communication. No safety net for missed opportunities. If an agent misses it, the <span class="stat">revenue is lost</span>.</p>
+      </div>
+      <div class="pv-card value">
+        <div class="pv-label">Twilio Value</div>
+        <p>Multi-channel escalation &mdash; email, then RCS, then voice &mdash; ensures time-sensitive changes reach agents <span class="stat">within minutes, not days</span>. Target: move conversion from 3% to <span class="stat">11%</span>.</p>
+      </div>
+      <div class="pv-card value">
+        <div class="pv-label">Twilio Value</div>
+        <p>Real-time behavioral tracking detects form abandonment and triggers the next touchpoint automatically. Engagement scoring flags <span class="stat">at-risk agents</span> before opportunities expire.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 4: Recap 2 -->
+<div class="slide slide-recap d2" data-index="4">
+  <div class="recap-header">
+    <div class="demo-label d2">Demo 2 Recap</div>
+    <h2>What You Just Saw &amp; Why It Matters</h2>
+  </div>
+  <div class="recap-grid">
+    <div class="recap-card showed">
+      <div class="recap-card-label">You Saw</div>
+      <h4>A policy change that refused to be ignored</h4>
+      <p>The moment the class change occurred, three channels activated in sequence: email first, then RCS when the form was abandoned, with voice as a final safety net. The system adapted in real time based on what the agent did &mdash; and didn't do.</p>
+    </div>
+    <div class="recap-card matters">
+      <div class="recap-card-label">Why It Matters</div>
+      <h4>Revenue opportunities stop dying in a portal queue</h4>
+      <p>Today, a better-class upsell waits for an agent who checks in once a week. What you saw <span class="highlight">compresses that week into minutes</span>. The difference between 3% and 11% conversion is simply whether the agent sees it in time.</p>
+    </div>
+    <div class="recap-card showed">
+      <div class="recap-card-label">You Saw</div>
+      <h4>Abandonment detected and acted on automatically</h4>
+      <p>Paul started the form and walked away. The platform didn't just log it &mdash; it triggered the next step. His engagement score dropped, his status changed, and a follow-up fired on his preferred channel. No human had to notice or intervene.</p>
+    </div>
+    <div class="recap-card matters">
+      <div class="recap-card-label">Why It Matters</div>
+      <h4>Your underwriting team gets a digital safety net</h4>
+      <p>With 250 cases per underwriter and static chat files, <span class="highlight">dropped tasks are invisible today</span>. This system surfaces them, escalates them, and keeps a record &mdash; so your small staff can handle the volume without things falling through the cracks.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 5: Demo 3 -->
+<div class="slide slide-demo d3" data-index="5">
+  <div class="slide-left">
+    <div class="demo-label d3">Demo 3</div>
+    <h2>From Anonymous to Known in 60 Seconds</h2>
+    <div class="products-bar">
+      <a class="product-tag" href="https://www.twilio.com/en-us/user-authentication-identity/verify" target="_blank" title="What is Twilio Verify?">Twilio Verify</a>
+      <a class="product-tag" href="https://www.twilio.com/en-us/user-authentication-identity/lookup" target="_blank" title="What is Twilio Lookup?">Twilio Lookup</a>
+      <a class="product-tag" href="https://www.twilio.com/en-us/products/conversational-ai/conversationrelay" target="_blank" title="What is Conversation Relay?">Conversation Relay</a>
+      <a class="product-tag" href="https://www.twilio.com/en-us/products/conversational-ai/conversationrelay" target="_blank" title="What is AI Agent?">AI Agent</a>
+    </div>
+    <div class="what-we-show">
+      <h3>What We'll Show</h3>
+      <ul>
+        <li>Customer clicks to call from the website &mdash; enters phone number</li>
+        <li>Lookup performs Line Type Intelligence; identity resolves instantly</li>
+        <li>Verify sends a one-time passcode; customer is authenticated digitally</li>
+        <li>Full context is passed to the AI agent before the call connects</li>
+        <li>AI greets the customer by name, knows their policy, and resolves the inquiry</li>
+      </ul>
+    </div>
+  </div>
+  <div class="slide-right">
+    <div class="pain-value-grid">
+      <div class="pv-card pain">
+        <div class="pv-label">Discovery Pain</div>
+        <p><span class="stat">25%</span> of every call is spent gathering basic information. Across <span class="stat">400,000 calls</span> at 4 minutes AHT, that's <span class="stat">400,000 minutes &mdash; 825 business days</span> lost per year.</p>
+      </div>
+      <div class="pv-card pain">
+        <div class="pv-label">Discovery Pain</div>
+        <p><span class="stat">No after-hours support</span> for complex or situational inquiries. Customers wait until morning. No tracking of handle time, resolution, or dispositions.</p>
+      </div>
+      <div class="pv-card value">
+        <div class="pv-label">Twilio Value</div>
+        <p>Digital identity verification eliminates the <span class="stat">"information tax."</span> Recovering that lost minute per call across 400K calls = <span class="stat">825 business days reclaimed</span> annually.</p>
+      </div>
+      <div class="pv-card value">
+        <div class="pv-label">Twilio Value</div>
+        <p>AI agents provide <span class="stat">24/7 availability</span> with full customer context. Routine inquiries are resolved without human intervention. <span class="stat">Mundane questions are deflected</span> so talent focuses on complex cases.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 6: Recap 3 -->
+<div class="slide slide-recap d3" data-index="6">
+  <div class="recap-header">
+    <div class="demo-label d3">Demo 3 Recap</div>
+    <h2>What You Just Saw &amp; Why It Matters</h2>
+  </div>
+  <div class="recap-grid">
+    <div class="recap-card showed">
+      <div class="recap-card-label">You Saw</div>
+      <h4>A caller identified and verified before the conversation began</h4>
+      <p>The phone number alone resolved an anonymous website visitor into a known customer with a full profile. A one-time passcode confirmed their identity digitally. By the time the AI spoke, it already had name, policy, coverage, and browsing context.</p>
+    </div>
+    <div class="recap-card matters">
+      <div class="recap-card-label">Why It Matters</div>
+      <h4>That first minute of every call becomes productive</h4>
+      <p>Your team handles 400,000 calls a year at 4 minutes each. The opening minute of every one is spent on <span class="highlight">"Can I have your name? Policy number? Date of birth?"</span> That's 400,000 lost minutes &mdash; 825 business days a year consumed by an avoidable process.</p>
+    </div>
+    <div class="recap-card showed">
+      <div class="recap-card-label">You Saw</div>
+      <h4>An AI agent that resolved a routine inquiry end to end</h4>
+      <p>The customer asked about their policy. The AI pulled the answer from their profile, referenced the correct coverage amount, and handled the interaction without a human ever being involved.</p>
+    </div>
+    <div class="recap-card matters">
+      <div class="recap-card-label">Why It Matters</div>
+      <h4>Your 680 home office staff stop fielding avoidable calls</h4>
+      <p>Every department told us the same thing: <span class="highlight">too many mundane questions consuming skilled people's time</span>. This AI handles the "Where is my application?" and "What's my coverage?" calls so your people can work on cases that require judgment.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 7: Demo 4 -->
+<div class="slide slide-demo d4" data-index="7">
+  <div class="slide-left">
+    <div class="demo-label d4">Demo 4</div>
+    <h2>The Human Handoff &amp; Intelligence Layer</h2>
+    <div class="products-bar">
+      <a class="product-tag" href="https://www.twilio.com/en-us/flex" target="_blank" title="What is Twilio Flex?">Twilio Flex</a>
+      <a class="product-tag" href="https://www.twilio.com/en-us/products/conversational-ai/conversational-intelligence" target="_blank" title="What is Conversational Intelligence?">Conversational Intelligence</a>
+      <a class="product-tag" href="https://www.twilio.com/en-us/products/conversational-ai/conversationrelay" target="_blank" title="What is Conversation Relay?">Conversation Relay</a>
+      <a class="product-tag" href="https://www.twilio.com/en-us/event-streams" target="_blank" title="What is Event Streams?">Event Streams</a>
+    </div>
+    <div class="what-we-show">
+      <h3>What We'll Show</h3>
+      <ul>
+        <li>Customer requests a human agent &mdash; AI performs a warm handoff</li>
+        <li>Flex agent desktop shows prepopulated context: name, policy, intent, transcript</li>
+        <li>Agent handles the call without asking the customer to repeat anything</li>
+        <li>Call recording is analyzed by Conversational Intelligence</li>
+        <li>Operators extract sentiment, entities, churn signals, and topics automatically</li>
+      </ul>
+    </div>
+  </div>
+  <div class="slide-right">
+    <div class="pain-value-grid">
+      <div class="pv-card pain">
+        <div class="pv-label">Discovery Pain</div>
+        <p>Policy Services and Claims use <span class="stat">different tools</span>. When a customer moves between departments, everyone <span class="stat">starts from scratch</span>. No shared interaction history.</p>
+      </div>
+      <div class="pv-card pain">
+        <div class="pv-label">Discovery Pain</div>
+        <p><span class="stat">Zero tracking</span> of Average Handle Time, call resolution, or dispositions. Impossible to measure operational efficiency or identify improvement opportunities.</p>
+      </div>
+      <div class="pv-card value">
+        <div class="pv-label">Twilio Value</div>
+        <p>Flex provides a <span class="stat">single pane of glass</span>. Customer context, AI transcript summary, and browsing trail follow the customer across departments. NPS improves because customers <span class="stat">never repeat their story</span>.</p>
+      </div>
+      <div class="pv-card value">
+        <div class="pv-label">Twilio Value</div>
+        <p>Conversational Intelligence auto-generates <span class="stat">AHT, dispositions, sentiment, and topic analysis</span> on every call. Data flows back to Segment and PowerBI for <span class="stat">holistic operational reporting</span>.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 8: Recap 4 -->
+<div class="slide slide-recap d4" data-index="8">
+  <div class="recap-header">
+    <div class="demo-label d4">Demo 4 Recap</div>
+    <h2>What You Just Saw &amp; Why It Matters</h2>
+  </div>
+  <div class="recap-grid">
+    <div class="recap-card showed">
+      <div class="recap-card-label">You Saw</div>
+      <h4>A customer transferred without losing any context</h4>
+      <p>The AI recognized the inquiry needed a human. It packaged everything &mdash; customer identity, browsing history, what was already discussed &mdash; and delivered it to the agent's screen before they picked up. The agent opened with the answer, not the questions.</p>
+    </div>
+    <div class="recap-card matters">
+      <div class="recap-card-label">Why It Matters</div>
+      <h4>Departments stop operating as separate islands</h4>
+      <p>You described Claims and Policy Services using different systems with <span class="highlight">no shared view of the customer's journey</span>. What you saw is a single platform where the interaction history &mdash; regardless of which department touched it &mdash; travels with the customer.</p>
+    </div>
+    <div class="recap-card showed">
+      <div class="recap-card-label">You Saw</div>
+      <h4>A completed call instantly analyzed for sentiment, topics, and outcomes</h4>
+      <p>The recording was submitted to Conversational Intelligence the moment the call ended. Within seconds: a full transcript, detected entities, a sentiment arc from frustrated to grateful, churn signals flagged, and a generated summary &mdash; all without anyone clicking a button.</p>
+    </div>
+    <div class="recap-card matters">
+      <div class="recap-card-label">Why It Matters</div>
+      <h4>You finally have the data to manage what you measure</h4>
+      <p>Today you told us you <span class="highlight">don't track AHT, resolution rates, or dispositions</span>. This gives you all three on every call, automatically. And because it feeds back into Segment, each interaction makes the customer profile smarter for the next one.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 9: Closing -->
+<div class="slide slide-closing" data-index="9">
+  <div class="twilio-logo"><svg viewBox="0 0 60 60" width="48" height="48" xmlns="http://www.w3.org/2000/svg"><path d="M30 0C13.43 0 0 13.43 0 30s13.43 30 30 30 30-13.43 30-30S46.57 0 30 0zm0 51.82c-12.03 0-21.82-9.79-21.82-21.82S17.97 8.18 30 8.18 51.82 17.97 51.82 30 42.03 51.82 30 51.82zm11.48-28.3a5.48 5.48 0 1 1-5.48-5.48 5.48 5.48 0 0 1 5.48 5.48zm0 13.96a5.48 5.48 0 1 1-5.48-5.48 5.48 5.48 0 0 1 5.48 5.48zm-13.96 0a5.48 5.48 0 1 1-5.48-5.48 5.48 5.48 0 0 1 5.48 5.48zm0-13.96a5.48 5.48 0 1 1-5.48-5.48 5.48 5.48 0 0 1 5.48 5.48z" fill="#F22F46"/></svg><span class="twilio-wordmark">twilio</span></div>
+  <h2>The Measurable Impact</h2>
+  <div class="closing-grid">
+    <div class="closing-card">
+      <div class="closing-stat green">3% &rarr; 11%</div>
+      <div class="closing-desc">"Better Class" conversion rate with instant multi-channel agent notification</div>
+    </div>
+    <div class="closing-card">
+      <div class="closing-stat blue">825 days</div>
+      <div class="closing-desc">Business days of agent time reclaimed annually by eliminating the "information tax"</div>
+    </div>
+    <div class="closing-card">
+      <div class="closing-stat amber">98% vs 20%</div>
+      <div class="closing-desc">SMS open rate vs. email &mdash; reaching agents on the channel they actually use</div>
+    </div>
+    <div class="closing-card">
+      <div class="closing-stat green">24/7</div>
+      <div class="closing-desc">AI-powered availability for routine inquiries, with full customer context</div>
+    </div>
+    <div class="closing-card">
+      <div class="closing-stat blue">0 &rarr; 100%</div>
+      <div class="closing-desc">Call analytics coverage &mdash; AHT, sentiment, dispositions on every interaction</div>
+    </div>
+    <div class="closing-card">
+      <div class="closing-stat amber">1 Profile</div>
+      <div class="closing-desc">Unified "Golden Profile" for every agent and customer, powering propensity models</div>
+    </div>
+  </div>
+</div>
+
+<!-- Navigation -->
+<div class="nav-bar">
+  <div class="nav-dot active" data-target="0"></div>
+  <div class="nav-dot" data-target="1"></div>
+  <div class="nav-dot" data-target="2"></div>
+  <div class="nav-dot" data-target="3"></div>
+  <div class="nav-dot" data-target="4"></div>
+  <div class="nav-dot" data-target="5"></div>
+  <div class="nav-dot" data-target="6"></div>
+  <div class="nav-dot" data-target="7"></div>
+  <div class="nav-dot" data-target="8"></div>
+  <div class="nav-dot" data-target="9"></div>
+  <span class="nav-hint">&larr; &rarr; to navigate</span>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const dots = document.querySelectorAll('.nav-dot');
+  let current = 0;
+
+  function goTo(index) {
+    if (index < 0 || index >= slides.length) return;
+    slides[current].classList.remove('active');
+    dots[current].classList.remove('active');
+    current = index;
+    slides[current].classList.add('active');
+    dots[current].classList.add('active');
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); goTo(current + 1); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(current - 1); }
+  });
+
+  dots.forEach(dot => {
+    dot.addEventListener('click', () => goTo(parseInt(dot.dataset.target)));
+  });
+</script>
+
+</body>
+</html>
