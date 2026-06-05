@@ -104,7 +104,7 @@ exports.handler = async function (context, event, callback) {
     console.log('HANDOFF -> Enqueuing to Flex:', taskAttributes);
 
     twiml.say({ voice: 'Polly.Joanna' }, 'Please hold while I connect you to a specialist.');
-    twiml.enqueue({ workflowSid: 'REDACTED_FLEX_WORKFLOW_SID' }).task({}, taskAttributes);
+    twiml.enqueue({ workflowSid: context.FLEX_WORKFLOW_SID }).task({}, taskAttributes);
   } else {
     console.log('HANDOFF -> No HandoffData, hanging up');
     twiml.hangup();

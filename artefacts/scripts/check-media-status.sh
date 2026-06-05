@@ -50,8 +50,8 @@ for ENTRY in "${ASSETS[@]}"; do
 done
 
 # Check content template media URLs are reachable
-API_KEY="${TWILIO_API_KEY:-REDACTED_TWILIO_API_KEY}"
-API_SECRET="${TWILIO_API_SECRET:-REDACTED_TWILIO_API_SECRET}"
+API_KEY="${TWILIO_API_KEY:?Set TWILIO_API_KEY env var}"
+API_SECRET="${TWILIO_API_SECRET:?Set TWILIO_API_SECRET env var}"
 
 echo "========================================="
 echo " Content Template Media Check"

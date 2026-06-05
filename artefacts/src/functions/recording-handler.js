@@ -2,7 +2,7 @@
 // Receives recordingStatusCallback events and submits completed recordings
 // to Conversational Intelligence for transcription and analysis.
 
-const INTELLIGENCE_SERVICE_SID = 'REDACTED_INTELLIGENCE_SERVICE_SID';
+const INTELLIGENCE_SERVICE_SID = process.env.INTELLIGENCE_SERVICE_SID || context.INTELLIGENCE_SERVICE_SID;
 
 exports.handler = async function (context, event, callback) {
   const response = new Twilio.Response();
